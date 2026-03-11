@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payments - Hotel Management System</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { background-color: #f0f2f5; }
+    .sidebar {
+      min-height: 100vh;
+      background-color: #0d6efd;
+      color: white;
+      padding: 20px;
+    }
+    .sidebar a {
+      color: white;
+      text-decoration: none;
+      display: block;
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 4px;
+    }
+    .sidebar a:hover { background-color: rgba(255,255,255,0.2); }
+    .sidebar a.active { background-color: rgba(255,255,255,0.3); }
+  </style>
+</head>
+<body>
+
+<div class="container-fluid">
+  <div class="row">
+
+    <!-- Sidebar -->
+    <div class="col-md-2 sidebar">
+      <h5 class="mb-4">🏨 HMS</h5>
+      <a href="dashboard.html">📊 Dashboard</a>
+      <a href="rooms.html">🛏️ Rooms</a>
+      <a href="reservations.html">📋 Reservations</a>
+      <a href="payments.html" class="active">💳 Payments</a>
+      <hr style="border-color: rgba(255,255,255,0.3)">
+      <a href="#" onclick="logout()">🚪 Logout</a>
+    </div>
+
+    <!-- Main Content -->
+    <div class="col-md-10 p-4">
+      <h4 class="mb-4">💳 Payments</h4>
+
+<!-- Record Payment -->
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-header bg-white fw-bold">Record Payment</div>
+  <div class="card-body">
+
+    <!-- Dropdown Selection -->
+    <div class="row g-3 mb-3">
+      <div class="col-md-12">
+        <label class="form-label fw-bold">Select Reservation</label>
+        <select id="reservationDropdown" class="form-select"
+          onchange="onReservationSelect()">
+          <option value="">-- Select a guest reservation --</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Reservation Details Card -->
+    <div id="reservationDetails" class="d-none mb-3">
+      <div class="card bg-light border-0">
+        <div class="card-body">
+          <div class="row text-center">
+            <div class="col-md-2">
+              <div class="text-muted small">Reservation ID</div>
+              <div class="fw-bold text-primary" id="detailId"></div>
+            </div>
+            <div class="col-md-2">
+              <div class="text-muted small">Guest Name</div>
+              <div class="fw-bold" id="detailGuest"></div>
+            </div>
+            <div class="col-md-2">
+              <div class="text-muted small">Room</div>
+              <div class="fw-bold" id="detailRoom"></div>
+            </div>
+            <div class="col-md-2">
+              <div class="text-muted small">Check In</div>
+              <div class="fw-bold" id="detailCheckIn"></div>
+            </div>
+            <div class="col-md-2">
+              <div class="text-muted small">Total Bill</div>
+              <div class="fw-bold text-dark" id="detailTotal"></div>
+            </div>
+            <div class="col-md-2">
+              <div class="text-muted small">Balance Due</div>
+              <div class="fw-bold text-danger fs-5" id="detailBalance"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Payment Fields -->
+    <div class="row g-3">
+      <div class="col-md-3">
+        <label class="form-label">Reservation ID</label>
+        <input type="number" id="reservationId" class="form-control"
+          placeholder="Auto-filled from dropdown" readonly>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Payment Method</label>
+        <select id="paymentMethod" class="form-select">
+          <option value="Cash">Cash</option>
+          <option value="Credit Card">Credit Card</option>
+          <option value="Debit Card">Debit Card</option>
+          <option value="GCash">GCash</option>
+          <option value="Bank Transfer">Bank Transfer</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Amount</label>
+        <input type="number" id="paymentAmount" class="form-control"
+          placeholder="0.00" step="0.01">
+      </div>
+      <div class="col-md-3 d-flex align-items-end">
+        <button onclick="recordPayment()" class="btn btn-success w-100">
+          Record Payment
+        </button>
+      </div>
+    </div>
+
+    <div id="paymentMsg" class="mt-2"></div>
+  </div>
+</div>
+
+      <!-- Revenue Summary -->
+      <div class="row g-3 mb-4">
+        <div class="col-md-4">
+          <div class="card border-0 shadow-sm p-3">
+            <div class="text-muted small">Total Revenue</div>
+            <div class="h3 fw-bold text-success" id="totalRevenue">--</div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card border-0 shadow-sm p-3">
+            <div class="text-muted small">Total Transactions</div>
+            <div class="h3 fw-bold text-primary" id="totalTransactions">--</div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card border-0 shadow-sm p-3">
+            <div class="text-muted small">Average Payment</div>
+            <div class="h3 fw-bold text-warning" id="avgPayment">--</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- All Payments Table -->
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white fw-bold">Payment History</div>
+        <div class="card-body p-0">
+          <table class="table table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>#</th>
+                <th>Guest</th>
+                <th>Room</th>
+                <th>Check In</th>
+                <th>Check Out</th>
+                <th>Total Bill</th>
+                <th>Amount Paid</th>
+                <th>Method</th>
+                <th>Date</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="paymentsTable">
+              <tr>
+                <td colspan="10" class="text-center py-3">Loading...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  const API   = 'http://192.168.100.60:3000';
+const token = localStorage.getItem('token');
+const user  = JSON.parse(localStorage.getItem('user') || '{}');
+
+if (!token) window.location.href = 'login.html';
+
+let allReservations = [];
+
+async function loadReservationDropdown() {
+  try {
+    const res  = await fetch(`${API}/api/reservations`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    allReservations = await res.json();
+
+    // Only show active reservations (not cancelled or already fully paid)
+    const active = allReservations.filter(r =>
+      r.status === 'Booked' || r.status === 'Checked In'
+    );
+
+    const dropdown = document.getElementById('reservationDropdown');
+    dropdown.innerHTML = '<option value="">-- Select a guest reservation --</option>';
+
+    if (active.length === 0) {
+      dropdown.innerHTML += '<option disabled>No active reservations found</option>';
+      return;
+    }
+
+    active.forEach(r => {
+      dropdown.innerHTML += `
+        <option value="${r.id}">
+          #${r.id} — ${r.guest_name} — Room ${r.room_number} —
+          ₱${parseFloat(r.total_amount).toLocaleString()} — ${r.status}
+        </option>
+      `;
+    });
+
+  } catch (err) {
+    console.error('Load dropdown error:', err);
+  }
+}
+
+async function onReservationSelect() {
+  const id = document.getElementById('reservationDropdown').value;
+
+  if (!id) {
+    document.getElementById('reservationDetails').classList.add('d-none');
+    document.getElementById('reservationId').value    = '';
+    document.getElementById('paymentAmount').value    = '';
+    return;
+  }
+
+  // Auto fill the ID field
+  document.getElementById('reservationId').value = id;
+
+  try {
+    // Get reservation details
+    const res  = await fetch(`${API}/api/reservations/${id}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await res.json();
+
+    // Get existing payments
+    const payRes  = await fetch(`${API}/api/payments/reservation/${id}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const payData = await payRes.json();
+
+    const totalPaid = payData.total_paid ? parseFloat(payData.total_paid) : 0;
+    const balance   = parseFloat(data.total_amount) - totalPaid;
+
+    // Show details card
+    document.getElementById('detailId').textContent =
+      `#${data.id}`;
+    document.getElementById('detailGuest').textContent =
+      data.guest_name;
+    document.getElementById('detailRoom').textContent =
+      `${data.room_number} (${data.room_type})`;
+    document.getElementById('detailCheckIn').textContent =
+      new Date(data.check_in_date).toLocaleDateString();
+    document.getElementById('detailTotal').textContent =
+      `₱${parseFloat(data.total_amount).toLocaleString()}`;
+    document.getElementById('detailBalance').textContent =
+      `₱${balance.toLocaleString()}`;
+
+    document.getElementById('reservationDetails').classList.remove('d-none');
+
+    // Auto fill amount with balance
+    document.getElementById('paymentAmount').value =
+      balance > 0 ? balance.toFixed(2) : '0.00';
+
+  } catch (err) {
+    console.error('Lookup error:', err);
+  }
+}
+
+async function recordPayment() {
+  const reservation_id = document.getElementById('reservationId').value;
+  const payment_method = document.getElementById('paymentMethod').value;
+  const amount         = document.getElementById('paymentAmount').value;
+  const msgDiv         = document.getElementById('paymentMsg');
+
+  if (!reservation_id || !amount) {
+    msgDiv.innerHTML =
+      '<div class="alert alert-warning">Please select a reservation and enter amount.</div>';
+    return;
+  }
+
+  try {
+    const res  = await fetch(`${API}/api/payments`, {
+      method:  'POST',
+      headers: {
+        'Content-Type':  'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        reservation_id: parseInt(reservation_id),
+        amount:         parseFloat(amount),
+        payment_method
+      })
+    });
+    const data = await res.json();
+
+    if (res.ok) {
+      msgDiv.innerHTML = `
+        <div class="alert alert-success">
+          ✅ Payment recorded —
+          ₱${parseFloat(data.amount_paid).toLocaleString()} via
+          ${data.payment_method} —
+          Balance: ₱${parseFloat(data.balance).toLocaleString()} —
+          <strong>${data.status}</strong>
+        </div>`;
+      loadPayments();
+      loadReservationDropdown();
+      onReservationSelect();
+    } else {
+      msgDiv.innerHTML =
+        `<div class="alert alert-danger">${data.message}</div>`;
+    }
+  } catch (err) {
+    msgDiv.innerHTML =
+      '<div class="alert alert-danger">Server error.</div>';
+  }
+}
+
+async function loadPayments() {
+  try {
+    const res  = await fetch(`${API}/api/payments`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await res.json();
+
+    const avg = data.total_transactions > 0
+      ? (parseFloat(data.total_revenue) / data.total_transactions).toFixed(2)
+      : '0.00';
+
+    document.getElementById('totalRevenue').textContent =
+      `₱${parseFloat(data.total_revenue).toLocaleString()}`;
+    document.getElementById('totalTransactions').textContent =
+      data.total_transactions;
+    document.getElementById('avgPayment').textContent =
+      `₱${parseFloat(avg).toLocaleString()}`;
+
+    const tbody = document.getElementById('paymentsTable');
+
+    if (!data.payments || data.payments.length === 0) {
+      tbody.innerHTML =
+        '<tr><td colspan="10" class="text-center py-3">No payments yet.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = data.payments.map(p => `
+      <tr>
+        <td>${p.id}</td>
+        <td>${p.guest_name}</td>
+        <td>${p.room_number}</td>
+        <td>${new Date(p.check_in_date).toLocaleDateString()}</td>
+        <td>${new Date(p.check_out_date).toLocaleDateString()}</td>
+        <td>₱${parseFloat(p.total_amount).toLocaleString()}</td>
+        <td>₱${parseFloat(p.amount).toLocaleString()}</td>
+        <td>${p.payment_method}</td>
+        <td>${new Date(p.payment_date).toLocaleDateString()}</td>
+        <td><span class="badge bg-success">${p.status}</span></td>
+      </tr>
+    `).join('');
+
+  } catch (err) {
+    console.error('Load payments error:', err);
+  }
+}
+
+function logout() {
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+  window.location.href = 'login.html';
+}
+
+// Load everything on page start
+loadReservationDropdown();
+loadPayments();
+
+</script>
+
+</body>
+</html>
