@@ -2,12 +2,6 @@
 
 A scalable and configurable hotel management system built with Node.js, Express, MySQL, and Bootstrap 5.
 
-## Tech Stack
-
-- **Backend:** Node.js, Express.js
-- **Database:** MySQL
-- **Frontend:** HTML, Bootstrap 5, Vanilla JavaScript
-- **Authentication:** JWT (JSON Web Tokens)
 
 ## Features
 
@@ -131,27 +125,3 @@ Use Postman to register your admin account:
         ├── rooms.html
         ├── reservations.html
         └── payments.html
-
-## Scalability Features
-
-- Connection pooling for handling multiple simultaneous users
-- Modular architecture separating controllers, routes, and middleware
-- Stateless JWT authentication supporting horizontal scaling
-- Database-driven configuration for tax rates and room types
-
-## Default System Configuration
-
-| Setting | Value |
-|---------|-------|
-| Tax Rate | 12% |
-| Max Stay | 30 nights |
-| Cancellation Fee | 10% |
-| Currency | PHP |
-
-## Future Enhancements
-
-- Docker containerization
-- AWS cloud deployment
-- Online payment gateway
-- Mobile application
-- AI-based dynamic pricing
