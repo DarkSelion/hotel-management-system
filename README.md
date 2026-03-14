@@ -15,6 +15,7 @@ A scalable and configurable hotel management system built with Node.js, Express,
 
 - [XAMPP](https://www.apachefriends.org)
 - [Node.js](https://nodejs.org)
+- [Postman](https://www.postman.com/downloads/)
 
 ## Installation
 
