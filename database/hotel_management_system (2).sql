@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 11, 2026 at 06:02 AM
+-- Generation Time: Mar 14, 2026 at 06:38 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -181,7 +181,9 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `name`, `email`, `password`, `role_id`, `created_at`) VALUES
-(1, 'Admin User', 'johncarlo', '$2b$10$OrbPsAML.QVR8SQ0ZVs4yuUxcDqolZY3wvSf8P2HLNAQHN6zpQfa2', 1, '2026-03-08 09:38:46');
+(1, 'John Carlo', 'johncarlo@hotel.com', '$2b$10$/7ciYdNQIzarJ3GcVjngI.ZbribNwvb84HzN98uXNqjc7boV1OUHu', 1, '2026-03-14 05:13:52'),
+(6, 'Carl Ian', 'carlian@hotel.com', '$2b$10$/63XYFj5PHeGFuUWzxFZfeTfMfQjZKUgi7SwzYBA5adxy8xpJxCDS', 2, '2026-03-14 05:14:43'),
+(7, 'Sherwin', 'sherwin@hotel.com', '$2b$10$ZMahnYHA6yC.254oYct8/OcXbYC5yeqAv.y2rG.Mbtz1pU1q4Rd9K', 3, '2026-03-14 05:16:11');
 
 --
 -- Indexes for dumped tables
@@ -294,7 +296,7 @@ ALTER TABLE `system_configurations`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- Constraints for dumped tables
