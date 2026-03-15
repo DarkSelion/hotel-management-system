@@ -60,14 +60,38 @@ Open hotel-frontend/login.html in your browser
 
 Use Postman to register your admin account:
 
-    POST http://localhost:3000/api/auth/register
+    POST http://3.106.251.7:3000/api/auth/register
+    Body → raw → JSON:
 
-    {
-        "name": "Admin User",
-        "email": "admin@hotel.com",
-        "password": "admin123",
-        "role_id": 1
-    }
+{
+  "name": "Receptionist User",
+  "email": "receptionist@hotel.com",
+  "password": "receptionist123",
+  "role_id": 2
+}
+```
+---
+
+### Role IDs
+```
+1 = Admin
+2 = Receptionist
+3 = Manager
+```
+
+POST http://3.106.251.7:3000/api/auth/login
+
+
+DB_HOST=hotel-management-db.closaoq4eetp.ap-southeast-2.rds.amazonaws.com
+DB_USER=admin
+DB_PASSWORD=johncarlo123
+DB_NAME=hotel_management_system
+DB_PORT=3306
+JWT_SECRET=hotelSecretKey123
+PORT=3000
+
+
+
 
 ## API Endpoints
 
