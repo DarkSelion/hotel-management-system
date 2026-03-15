@@ -106,14 +106,9 @@
       margin: 0;
     }
 
-    .user-badge {
-      background: #f0f4ff;
-      color: #4e9af1;
-      padding: 6px 16px;
-      border-radius: 20px;
-      font-size: 0.8rem;
-      font-weight: 600;
-    }
+    .user-badge { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; }
+    .user-badge .user-name { font-weight: 600; color: #1a1a2e; }
+    .user-badge .role-tag { padding: 4px 12px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
 
     /* Content area */
     .content-area {
@@ -493,8 +488,17 @@ const API = 'http://3.106.251.7:3000';
 
   if (!token) window.location.href = 'login.html';
 
-  document.getElementById('welcomeMsg').textContent =
-    `${user.name} — ${user.role}`;
+  const roleColors = {
+  'Admin':        'background:#fef2f2;color:#dc2626;',
+  'Receptionist': 'background:#f0fdf4;color:#16a34a;',
+  'Manager':      'background:#eff6ff;color:#2563eb;'
+};
+document.getElementById('welcomeMsg').innerHTML = `
+  <span class="user-name">${user.name}</span>
+  <span class="role-tag" style="${roleColors[user.role] || 'background:#f8fafc;color:#64748b;'}">
+    ${user.role}
+  </span>
+`;
 
   async function loadDashboard() {
     try {
