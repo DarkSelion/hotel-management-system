@@ -47,7 +47,7 @@ A scalable and configurable hotel management system built with Node.js, Express,
 
     DB_HOST=hotel-management-db.closaoq4eetp.ap-southeast-2.rds.amazonaws.com
     DB_USER=admin
-    DB_PASSWORD=HotelAdmin123
+    DB_PASSWORD=johncarlo
     DB_NAME=hotel_management_system
     DB_PORT=3306
     JWT_SECRET=hotelSecretKey123
@@ -191,7 +191,7 @@ Use Postman to register accounts:
 
     mysql -h hotel-management-db.closaoq4eetp.ap-southeast-2.rds.amazonaws.com -u admin -p
 
-    Password: HotelAdmin123
+    Password: johncarlo
 
 **Environment Variables on EC2**
 
