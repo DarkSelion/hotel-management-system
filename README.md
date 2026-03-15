@@ -31,12 +31,14 @@ A scalable and configurable hotel management system built with Node.js, Express,
 
 **3. Create .env file inside hotel-backend**
 
-    DB_HOST=localhost
-    DB_USER=root
-    DB_PASSWORD=
+    DB_HOST=hotel-management-db.closaoq4eetp.ap-southeast-2.rds.amazonaws.com
+    DB_USER=admin
+    DB_PASSWORD=HotelAdmin123
     DB_NAME=hotel_management_system
+    DB_PORT=3306
     JWT_SECRET=hotelSecretKey123
     PORT=3000
+
 
 **4. Set up database**
 
