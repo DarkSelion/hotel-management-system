@@ -2,6 +2,19 @@
 
 A scalable and configurable hotel management system built with Node.js, Express, MySQL, and Bootstrap 5.
 
+## Live Demo
+
+- **Frontend:** http://hms-capstone-frontend.s3-website-ap-southeast-2.amazonaws.com/login.html
+- **Backend API:** http://3.106.251.7:3000
+- **Database:** AWS RDS MySQL
+
+## Tech Stack
+
+- **Backend:** Node.js, Express.js
+- **Database:** MySQL
+- **Frontend:** HTML, Bootstrap 5, Vanilla JavaScript
+- **Authentication:** JWT (JSON Web Tokens)
+- **Cloud:** AWS EC2, RDS, S3
 
 ## Features
 
@@ -10,14 +23,15 @@ A scalable and configurable hotel management system built with Node.js, Express,
 - Reservation system with automatic tax calculation
 - Payment recording and balance tracking
 - Dashboard with real-time statistics
+- Cloud deployed and accessible from any device
 
 ## Prerequisites
 
 - [XAMPP](https://www.apachefriends.org)
 - [Node.js](https://nodejs.org)
-- [Postman](https://www.postman.com/downloads/)
+- [Postman](https://www.postman.com/downloads)
 
-## Installation
+## Local Installation
 
 **1. Clone the repository**
 
@@ -39,7 +53,6 @@ A scalable and configurable hotel management system built with Node.js, Express,
     JWT_SECRET=hotelSecretKey123
     PORT=3000
 
-
 **4. Set up database**
 
 1. Open XAMPP and start Apache and MySQL
@@ -58,14 +71,21 @@ A scalable and configurable hotel management system built with Node.js, Express,
 
 Open hotel-frontend/login.html in your browser
 
-## Default Admin Registration
+## Register Accounts
 
-Use Postman to register your admin account:
+Use Postman to register accounts:
 
     POST http://3.106.251.7:3000/api/auth/register
-    Body → raw → JSON:
----
 
+    Admin:
+    {
+      "name": "Admin User",
+      "email": "admin@hotel.com",
+      "password": "admin123",
+      "role_id": 1
+    }
+
+    Receptionist:
     {
       "name": "Receptionist User",
       "email": "receptionist@hotel.com",
@@ -73,29 +93,28 @@ Use Postman to register your admin account:
       "role_id": 2
     }
 
-```
----
+    Manager:
+    {
+      "name": "Manager User",
+      "email": "manager@hotel.com",
+      "password": "manager123",
+      "role_id": 3
+    }
 
-### Role IDs
-```
-1 = Admin
-2 = Receptionist
-3 = Manager
-```
+## Role IDs
 
-POST http://3.106.251.7:3000/api/auth/login
+    1 = Admin
+    2 = Receptionist
+    3 = Manager
 
+## Login
 
-DB_HOST=hotel-management-db.closaoq4eetp.ap-southeast-2.rds.amazonaws.com
-DB_USER=admin
-DB_PASSWORD=johncarlo123
-DB_NAME=hotel_management_system
-DB_PORT=3306
-JWT_SECRET=hotelSecretKey123
-PORT=3000
+    POST http://3.106.251.7:3000/api/auth/login
 
-
-
+    {
+      "email": "admin@hotel.com",
+      "password": "admin123"
+    }
 
 ## API Endpoints
 
@@ -141,11 +160,12 @@ PORT=3000
     │   │   └── roomController.js
     │   ├── middleware/
     │   │   └── authMiddleware.js
-    │   ├── routes/    
+    │   ├── routes/
     │   │   ├── authRoutes.js
     │   │   ├── paymentRoutes.js
     │   │   ├── reservationRoutes.js
     │   │   └── roomRoutes.js
+    │   ├── .env.example
     │   ├── package.json
     │   └── server.js
     └── hotel-frontend/
@@ -154,12 +174,62 @@ PORT=3000
         ├── rooms.html
         ├── reservations.html
         └── payments.html
---
+
+## AWS Deployment
+
+**EC2 Server Access**
+
+    # Fix permissions
     icacls "C:\hotel-key.pem" /inheritance:r
     icacls "C:\hotel-key.pem" /grant:r "%username%:(R)"
     icacls "C:\hotel-key.pem" /remove "BUILTIN\Users"
 
+    # Connect to EC2
     ssh -i "C:\hotel-key.pem" ubuntu@3.106.251.7
 
+**Database Access**
+
     mysql -h hotel-management-db.closaoq4eetp.ap-southeast-2.rds.amazonaws.com -u admin -p
-    
+
+    Password: HotelAdmin123
+
+**Environment Variables on EC2**
+
+    DB_HOST=hotel-management-db.closaoq4eetp.ap-southeast-2.rds.amazonaws.com
+    DB_USER=admin
+    DB_PASSWORD=HotelAdmin123
+    DB_NAME=hotel_management_system
+    DB_PORT=3306
+    JWT_SECRET=hotelSecretKey123
+    PORT=3000
+
+**PM2 Commands**
+
+    pm2 status
+    pm2 restart hotel-backend
+    pm2 logs hotel-backend
+
+## Scalability Features
+
+- Connection pooling for handling multiple simultaneous users
+- Modular architecture separating controllers, routes, and middleware
+- Stateless JWT authentication supporting horizontal scaling
+- Database-driven configuration for tax rates and room types
+- Cloud deployed on AWS EC2, RDS, and S3
+
+## Default System Configuration
+
+| Setting | Value |
+|---------|-------|
+| Tax Rate | 12% |
+| Max Stay | 30 nights |
+| Cancellation Fee | 10% |
+| Currency | PHP |
+
+## Future Enhancements
+
+- Docker containerization
+- Online payment gateway integration
+- Mobile application
+- AI-based dynamic pricing
+- CloudFront HTTPS support
