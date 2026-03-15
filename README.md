@@ -141,7 +141,7 @@ PORT=3000
     │   │   └── roomController.js
     │   ├── middleware/
     │   │   └── authMiddleware.js
-    │   ├── routes/
+    │   ├── routes/    
     │   │   ├── authRoutes.js
     │   │   ├── paymentRoutes.js
     │   │   ├── reservationRoutes.js
@@ -154,3 +154,12 @@ PORT=3000
         ├── rooms.html
         ├── reservations.html
         └── payments.html
+--
+    icacls "C:\hotel-key.pem" /inheritance:r
+    icacls "C:\hotel-key.pem" /grant:r "%username%:(R)"
+    icacls "C:\hotel-key.pem" /remove "BUILTIN\Users"
+
+    ssh -i "C:\hotel-key.pem" ubuntu@3.106.251.7
+
+    mysql -h hotel-management-db.closaoq4eetp.ap-southeast-2.rds.amazonaws.com -u admin -p
+    
