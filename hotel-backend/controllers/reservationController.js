@@ -121,10 +121,10 @@ const createReservation = async (req, res) => {
     );
 
     // Step 6: Mark room as Occupied
-    await connection.query(
-      "UPDATE rooms SET status = 'Occupied' WHERE id = ?",
-      [room_id]
-    );
+    //await connection.query(
+    // "UPDATE rooms SET status = 'Occupied' WHERE id = ?",
+    //    [room_id]
+    //  );
 
     await connection.commit();
 
@@ -271,9 +271,18 @@ const checkIn = async (req, res) => {
         message: `Cannot check in. Current status is: ${rows[0].status}`
       });
     }
+
+    // Mark reservation as Checked In
     await db.query(
       "UPDATE reservations SET status = 'Checked In' WHERE id = ?", [id]
     );
+
+    // Now mark room as Occupied
+    await db.query(
+      "UPDATE rooms SET status = 'Occupied' WHERE id = ?",
+      [rows[0].room_id]
+    );
+
     res.json({ message: 'Guest checked in successfully.' });
   } catch (err) {
     res.status(500).json({ message: 'Server error.', error: err.message });
