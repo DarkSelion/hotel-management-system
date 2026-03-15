@@ -197,7 +197,7 @@ Use Postman to register accounts:
 
     DB_HOST=hotel-management-db.closaoq4eetp.ap-southeast-2.rds.amazonaws.com
     DB_USER=admin
-    DB_PASSWORD=HotelAdmin123
+    DB_PASSWORD=johncarlo
     DB_NAME=hotel_management_system
     DB_PORT=3306
     JWT_SECRET=hotelSecretKey123
