@@ -62,13 +62,15 @@ Use Postman to register your admin account:
 
     POST http://3.106.251.7:3000/api/auth/register
     Body → raw → JSON:
+---
 
-{
-  "name": "Receptionist User",
-  "email": "receptionist@hotel.com",
-  "password": "receptionist123",
-  "role_id": 2
-}
+    {
+      "name": "Receptionist User",
+      "email": "receptionist@hotel.com",
+      "password": "receptionist123",
+      "role_id": 2
+    }
+
 ```
 ---
 
