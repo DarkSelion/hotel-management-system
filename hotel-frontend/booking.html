@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bookings - Hotel SPCF</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="sidebar-brand">
+    <h4>Hotel SPCF</h4>
+    <p id="sidebarRole"></p>
+  </div>
+  <div class="sidebar-menu" id="sidebarMenu"></div>
+</div>
+
+<div class="main-content">
+  <div class="topbar">
+    <h5>Bookings</h5>
+    <span class="user-badge" id="welcomeMsg"></span>
+  </div>
+  <div class="content-area">
+
+    <!-- Create Booking -->
+    <div class="section-title">Create Front Desk Booking</div>
+    <div class="card-custom">
+      <div class="card-head">
+        <h6>New Booking for Walk-in Guest</h6>
+      </div>
+      <div class="card-body-custom">
+
+        <div class="step-label">Step 1 — Select Dates</div>
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label">Check In Date</label>
+            <div class="date-picker-wrapper">
+              <div class="date-display" onclick="openCalendar('checkin')">
+                <span id="checkinDisplay" class="placeholder">Select date</span>
+                <span>📅</span>
+              </div>
+              <div class="calendar-popup" id="calCheckin"></div>
+            </div>
+            <input type="hidden" id="checkinValue">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Check Out Date</label>
+            <div class="date-picker-wrapper">
+              <div class="date-display" onclick="openCalendar('checkout')">
+                <span id="checkoutDisplay" class="placeholder">Select date</span>
+                <span>📅</span>
+              </div>
+              <div class="calendar-popup" id="calCheckout"></div>
+            </div>
+            <input type="hidden" id="checkoutValue">
+          </div>
+          <div class="col-md-4 d-flex align-items-end">
+            <button class="btn-primary-dark w-100" onclick="searchRooms()">
+              Search Rooms
+            </button>
+          </div>
+        </div>
+
+        <hr class="step-divider">
+        <div class="step-label">Step 2 — Select Room</div>
+        <div class="row g-3">
+          <div class="col-md-8">
+            <label class="form-label">Available Rooms</label>
+            <div style="position:relative;" id="roomDropdownWrapper">
+              <div class="room-dropdown-selected"
+                onclick="toggleRoomDropdown()">
+                <span id="roomDropdownLabel">-- Search rooms first --</span>
+                <span>▼</span>
+              </div>
+              <div class="room-dropdown-list"
+                id="roomDropdownList"
+                style="display:none;">
+              </div>
+              <input type="hidden" id="roomSelect">
+            </div>
+          </div>
+        </div>
+        <div id="costPreview" class="mt-3 d-none"></div>
+
+        <hr class="step-divider">
+        <div class="step-label">Step 3 — Guest Information</div>
+        <div class="row g-3">
+          <div class="col-md-3 col-6">
+            <label class="form-label">First Name</label>
+            <input type="text" id="firstName" class="form-control"
+              placeholder="Juan">
+          </div>
+          <div class="col-md-3 col-6">
+            <label class="form-label">Last Name</label>
+            <input type="text" id="lastName" class="form-control"
+              placeholder="dela Cruz">
+          </div>
+          <div class="col-md-3 col-6">
+            <label class="form-label">Phone</label>
+            <input type="text" id="phone" class="form-control"
+              placeholder="09171234567">
+          </div>
+          <div class="col-md-3 col-6">
+            <label class="form-label">Email</label>
+            <input type="email" id="guestEmail" class="form-control"
+              placeholder="juan@email.com">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Address</label>
+            <input type="text" id="address" class="form-control"
+              placeholder="Manila, Philippines">
+          </div>
+        </div>
+
+        <div id="createMsg" class="mt-3"></div>
+        <div class="mt-3">
+          <button class="btn-success-dark" onclick="createBooking()">
+            Confirm Booking
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Bookings Table -->
+    <div class="section-title">All Bookings</div>
+    <div class="table-card">
+      <div class="table-header"><h6>Booking Records</h6></div>
+      <div class="table-responsive">
+        <table class="table mb-0">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Guest</th>
+              <th>Room</th>
+              <th>Check In</th>
+              <th>Check Out</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="bookingsTable">
+            <tr>
+              <td colspan="8" class="text-center py-4 text-muted">
+                Loading...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Custom Confirm Modal -->
+<div id="confirmModal"
+  style="display:none;position:fixed;top:0;left:0;
+         width:100%;height:100%;background:rgba(0,0,0,0.5);
+         z-index:9999;align-items:center;justify-content:center;">
+  <div style="background:white;border-radius:20px;padding:32px;
+              max-width:380px;width:90%;margin:auto;
+              box-shadow:0 20px 60px rgba(0,0,0,0.3);text-align:center;">
+    <div id="modalIcon"
+      style="font-size:2.5rem;margin-bottom:16px;"></div>
+    <h6 id="modalTitle"
+      style="font-weight:700;color:#1a1a2e;
+             font-size:1.1rem;margin-bottom:8px;"></h6>
+    <p id="modalMessage"
+      style="color:#64748b;font-size:0.875rem;margin-bottom:24px;"></p>
+    <div style="display:flex;gap:10px;justify-content:center;">
+      <button onclick="closeModal()"
+        style="background:#f1f5f9;color:#64748b;border:none;
+               border-radius:10px;padding:10px 24px;
+               font-weight:600;font-size:0.875rem;cursor:pointer;"
+        onmouseover="this.style.background='#e2e8f0'"
+        onmouseout="this.style.background='#f1f5f9'">
+        Cancel
+      </button>
+      <button id="modalConfirmBtn" onclick="confirmModal()"
+        style="border:none;border-radius:10px;padding:10px 24px;
+               font-weight:600;font-size:0.875rem;cursor:pointer;">
+        Confirm
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/config.js"></script>
+<script src="js/calendar.js"></script>
+<script>
+  requireAuth();
+  setupSidebar('booking.html');
+  setupWelcome();
+</script>
+<script src="js/booking.js"></script>
+</body>
+</html>

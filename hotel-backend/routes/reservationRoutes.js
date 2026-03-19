@@ -10,12 +10,15 @@ const {
 } = require('../controllers/reservationController');
 const { verifyToken, authorizeRoles } = require('../middleware/authMiddleware');
 
-// All reservation routes require login
-router.post('/',                verifyToken, authorizeRoles('Admin', 'Receptionist'), createReservation);
-router.get('/',                 verifyToken, getAllReservations);
-router.get('/:id',              verifyToken, getReservationById);
-router.patch('/:id/cancel',     verifyToken, authorizeRoles('Admin', 'Receptionist'), cancelReservation);
-router.patch('/:id/checkin',    verifyToken, authorizeRoles('Admin', 'Receptionist'), checkIn);
-router.patch('/:id/checkout',   verifyToken, authorizeRoles('Admin', 'Receptionist'), checkOut);
+// Public route — guests can reserve without login
+router.post('/guest', createReservation);
+
+// Protected routes — staff only
+router.post('/',              verifyToken, authorizeRoles('Admin', 'Receptionist', 'Manager'), createReservation);
+router.get('/',               verifyToken, getAllReservations);
+router.get('/:id',            verifyToken, getReservationById);
+router.patch('/:id/cancel',   verifyToken, authorizeRoles('Admin', 'Receptionist', 'Manager'), cancelReservation);
+router.patch('/:id/checkin',  verifyToken, authorizeRoles('Admin', 'Receptionist', 'Manager'), checkIn);
+router.patch('/:id/checkout', verifyToken, authorizeRoles('Admin', 'Receptionist', 'Manager'), checkOut);
 
 module.exports = router;

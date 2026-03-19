@@ -5,86 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Payments - Hotel SPCF</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <style>
-    
-    .detail-label {
-  font-size: 0.72rem;
-  color: #94a3b8;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 4px;
-}
-.detail-value {
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: #1a1a2e;
-}
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background-color: #f4f6fb; font-family: 'Segoe UI', sans-serif; }
-    .sidebar {
-      min-height: 100vh; width: 240px;
-      background: linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-      position: fixed; top: 0; left: 0; z-index: 100;
-    }
-    .sidebar-brand { padding: 28px 24px; border-bottom: 1px solid rgba(255,255,255,0.08); }
-    .sidebar-brand h4 { color: white; font-weight: 700; font-size: 1.1rem; }
-    .sidebar-brand p { color: rgba(255,255,255,0.4); font-size: 0.75rem; margin: 0; }
-    .sidebar-menu { padding: 20px 0; }
-    .sidebar-menu a {
-      display: block; padding: 12px 24px;
-      color: rgba(255,255,255,0.6); text-decoration: none;
-      font-size: 0.875rem; font-weight: 500;
-      border-left: 3px solid transparent; transition: all 0.2s;
-    }
-    
-    .sidebar-menu a:hover { color: white; background: rgba(255,255,255,0.05); border-left-color: rgba(255,255,255,0.3); }
-    .sidebar-menu a.active { color: white; background: rgba(255,255,255,0.1); border-left-color: #4e9af1; }
-    .sidebar-menu .menu-label { padding: 16px 24px 6px; color: rgba(255,255,255,0.25); font-size: 0.7rem; letter-spacing: 1px; text-transform: uppercase; }
-    .sidebar-menu .divider { border-color: rgba(255,255,255,0.08); margin: 12px 24px; }
-    .main-content { margin-left: 240px; min-height: 100vh; }
-    .topbar { background: white; padding: 16px 32px; border-bottom: 1px solid #e8ecf0; display: flex; justify-content: space-between; align-items: center; }
-    .topbar h5 { font-weight: 700; color: #1a1a2e; margin: 0; }
-.user-badge { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; }
-.user-badge .user-name { font-weight: 600; color: #1a1a2e; }
-.user-badge .role-tag { padding: 4px 12px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }    .content-area { padding: 28px 32px; }
-    .section-title { font-size: 0.75rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #94a3b8; margin-bottom: 14px; margin-top: 28px; }
-    .section-title:first-child { margin-top: 0; }
-    .stat-card { background: white; border-radius: 14px; padding: 22px; border: 1px solid #e8ecf0; }
-    .stat-card .label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; margin-bottom: 8px; }
-    .stat-card .value { font-size: 1.8rem; font-weight: 800; line-height: 1; }
-    .stat-card .indicator { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; margin-bottom: 14px; }
-    .card-custom { background: white; border-radius: 14px; border: 1px solid #e8ecf0; overflow: hidden; margin-bottom: 24px; }
-    .card-head { padding: 18px 22px; border-bottom: 1px solid #e8ecf0; }
-    .card-head h6 { font-weight: 700; color: #1a1a2e; margin: 0; font-size: 0.9rem; }
-    .card-body-custom { padding: 22px; }
-    .form-label { font-size: 0.8rem; font-weight: 600; color: #475569; }
-    .form-control, .form-select { border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 10px 14px; font-size: 0.875rem; }
-    .form-control:focus, .form-select:focus { border-color: #4e9af1; box-shadow: 0 0 0 3px rgba(78,154,241,0.1); }
-    .btn-pay { background: #16a34a; color: white; border: none; border-radius: 10px; padding: 11px 28px; font-weight: 600; font-size: 0.875rem; width: 100%; }
-    .btn-pay:hover { background: #15803d; }
-    .table thead th { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; border: none; padding: 12px 20px; background: #f8fafc; }
-    .table tbody td { padding: 14px 20px; font-size: 0.85rem; color: #334155; border-color: #f1f5f9; vertical-align: middle; }
-    .badge-status { padding: 5px 12px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; }
-    .detail-card { background: #f8fafc; border-radius: 12px; padding: 18px; border: 1px solid #e8ecf0; margin-top: 16px; }
-  </style>
+  <link rel="stylesheet" href="css/main.css">
 </head>
 <body>
 
 <div class="sidebar">
   <div class="sidebar-brand">
     <h4>Hotel SPCF</h4>
-    <p></p>
+    <p id="sidebarRole"></p>
   </div>
-  <div class="sidebar-menu">
-    <div class="menu-label">Main Menu</div>
-    <a href="dashboard.html">Dashboard</a>
-    <a href="rooms.html">Rooms</a>
-    <a href="reservations.html">Reservations</a>
-    <a href="payments.html" class="active">Payments</a>
-    <hr class="divider">
-    <a href="#" onclick="logout()">Logout</a>
-  </div>
+  <div class="sidebar-menu" id="sidebarMenu"></div>
 </div>
 
 <div class="main-content">
@@ -94,438 +24,268 @@
   </div>
   <div class="content-area">
 
-    <!-- Revenue Stats -->
-    <div class="section-title">Revenue Overview</div>
-    <div class="row g-3 mb-4">
-      <div class="col-md-4">
-        <div class="stat-card">
-          <div class="indicator" style="background:#f0fdf4;">💰</div>
-          <div class="label">Total Revenue</div>
-          <div class="value" style="color:#16a34a;" id="totalRevenue">--</div>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="stat-card">
-          <div class="indicator" style="background:#eff6ff;">📊</div>
-          <div class="label">Total Transactions</div>
-          <div class="value" style="color:#2563eb;" id="totalTransactions">--</div>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="stat-card">
-          <div class="indicator" style="background:#fff7ed;">📈</div>
-          <div class="label">Average Payment</div>
-          <div class="value" style="color:#ea580c;" id="avgPayment">--</div>
-        </div>
-      </div>
-    </div>
-
-<!-- Record Payment -->
-<div class="section-title">Record Payment</div>
-<div class="card-custom">
-  <div class="card-head"><h6>Process Payment</h6></div>
-  <div class="card-body-custom">
-
-    <!-- Dropdown -->
-    <div class="row g-3">
-      <div class="col-md-12">
-        <label class="form-label">Select Reservation</label>
-        <div style="position:relative;" id="dropdownWrapper">
-          <div id="dropdownSelected"
-            onclick="toggleDropdown()"
-            style="border:1.5px solid #e2e8f0;border-radius:12px;
-                   padding:14px 16px;font-size:0.875rem;
-                   background:#f8fafc;color:#94a3b8;
-                   cursor:pointer;display:flex;
-                   justify-content:space-between;align-items:center;
-                   box-shadow:0 2px 8px rgba(0,0,0,0.04);">
-            <span id="dropdownLabel">-- Select a guest reservation --</span>
-            <span style="color:#94a3b8;font-size:0.75rem;">▼</span>
+    <!-- Revenue — Admin and Manager only -->
+    <div id="revenueSection">
+      <div class="section-title">Revenue Overview</div>
+      <div class="row g-3 mb-2">
+        <div class="col-md-4 col-6">
+          <div class="stat-card">
+            <div class="indicator" style="background:#f0fdf4;">💰</div>
+            <div class="label">Total Revenue</div>
+            <div class="value" style="color:#16a34a;font-size:1.4rem;"
+              id="totalRevenue">--</div>
           </div>
-          <div id="dropdownList"
-            style="display:none;position:absolute;top:calc(100% + 6px);
-                   left:0;right:0;background:white;
-                   border:1.5px solid #e2e8f0;border-radius:12px;
-                   box-shadow:0 8px 24px rgba(0,0,0,0.08);
-                   z-index:999;overflow:hidden;max-height:280px;
-                   overflow-y:auto;">
+        </div>
+        <div class="col-md-4 col-6">
+          <div class="stat-card">
+            <div class="indicator" style="background:#eff6ff;">📊</div>
+            <div class="label">Total Transactions</div>
+            <div class="value" style="color:#2563eb;"
+              id="totalTransactions">--</div>
           </div>
-          <input type="hidden" id="reservationDropdown">
+        </div>
+        <div class="col-md-4 col-6">
+          <div class="stat-card">
+            <div class="indicator" style="background:#fff7ed;">📈</div>
+            <div class="label">Average Payment</div>
+            <div class="value" style="color:#ea580c;"
+              id="avgPayment">--</div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Reservation Details (hidden until selected) -->
-    <div id="reservationDetails" class="d-none"
-      style="margin-top:16px;background:#f8fafc;border-radius:12px;
-             padding:18px;border:1px solid #e8ecf0;">
-      <div class="row g-3">
-        <div class="col-md-2">
-          <div class="detail-label">Reservation ID</div>
-          <div class="detail-value" id="detailId"></div>
+    <!-- Record Payment — Admin, Receptionist, Manager -->
+    <div id="recordPaymentSection">
+      <div class="section-title">Record Payment</div>
+      <div class="card-custom">
+        <div class="card-head">
+          <h6>💳 Process Payment</h6>
         </div>
-        <div class="col-md-2">
-          <div class="detail-label">Guest</div>
-          <div class="detail-value" id="detailGuest"></div>
-        </div>
-        <div class="col-md-2">
-          <div class="detail-label">Room</div>
-          <div class="detail-value" id="detailRoom"></div>
-        </div>
-        <div class="col-md-2">
-          <div class="detail-label">Check In</div>
-          <div class="detail-value" id="detailCheckIn"></div>
-        </div>
-        <div class="col-md-2">
-          <div class="detail-label">Total Bill</div>
-          <div class="detail-value" id="detailTotal"></div>
-        </div>
-        <div class="col-md-2">
-          <div class="detail-label">Balance Due</div>
-          <div class="detail-value"
-            style="color:#dc2626;" id="detailBalance"></div>
+        <div class="card-body-custom">
+
+          <!-- Reservation Selector -->
+          <div class="mb-4">
+            <label class="form-label">Select Guest Reservation</label>
+            <div style="position:relative;" id="dropdownWrapper">
+              <div onclick="toggleDropdown()"
+                style="border:1.5px solid #e2e8f0;border-radius:12px;
+                       padding:14px 18px;font-size:0.9rem;background:white;
+                       cursor:pointer;display:flex;justify-content:space-between;
+                       align-items:center;box-shadow:0 2px 8px rgba(0,0,0,0.04);
+                       transition:border-color 0.2s;">
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <span style="font-size:1.2rem;">🔍</span>
+                  <span id="dropdownLabel" style="color:#94a3b8;">
+                    -- Select a guest reservation --
+                  </span>
+                </div>
+                <span style="color:#94a3b8;">▼</span>
+              </div>
+              <div id="dropdownList"
+                style="display:none;position:absolute;top:calc(100% + 6px);
+                       left:0;right:0;background:white;
+                       border:1.5px solid #e2e8f0;border-radius:14px;
+                       box-shadow:0 8px 30px rgba(0,0,0,0.1);
+                       z-index:999;overflow:hidden;
+                       max-height:280px;overflow-y:auto;">
+              </div>
+              <input type="hidden" id="reservationDropdown">
+            </div>
+          </div>
+
+          <!-- Reservation Details Card -->
+          <div id="reservationDetails" class="d-none"
+            style="margin-bottom:24px;">
+            <div style="background:linear-gradient(135deg,#1a1a2e,#0f3460);
+                        border-radius:16px;padding:24px;color:white;
+                        box-shadow:0 8px 24px rgba(26,26,46,0.3);">
+              <div style="font-size:0.7rem;font-weight:700;letter-spacing:2px;
+                          text-transform:uppercase;color:rgba(255,255,255,0.5);
+                          margin-bottom:16px;">
+                Reservation Details
+              </div>
+              <div class="row g-3">
+                <div class="col-6 col-md-2">
+                  <div style="color:rgba(255,255,255,0.5);font-size:0.7rem;
+                              font-weight:600;text-transform:uppercase;
+                              letter-spacing:0.5px;margin-bottom:4px;">ID</div>
+                  <div style="font-weight:700;font-size:0.95rem;"
+                    id="detailId"></div>
+                </div>
+                <div class="col-6 col-md-2">
+                  <div style="color:rgba(255,255,255,0.5);font-size:0.7rem;
+                              font-weight:600;text-transform:uppercase;
+                              letter-spacing:0.5px;margin-bottom:4px;">
+                    Guest
+                  </div>
+                  <div style="font-weight:700;font-size:0.95rem;"
+                    id="detailGuest"></div>
+                </div>
+                <div class="col-6 col-md-2">
+                  <div style="color:rgba(255,255,255,0.5);font-size:0.7rem;
+                              font-weight:600;text-transform:uppercase;
+                              letter-spacing:0.5px;margin-bottom:4px;">
+                    Room
+                  </div>
+                  <div style="font-weight:700;font-size:0.95rem;"
+                    id="detailRoom"></div>
+                </div>
+                <div class="col-6 col-md-2">
+                  <div style="color:rgba(255,255,255,0.5);font-size:0.7rem;
+                              font-weight:600;text-transform:uppercase;
+                              letter-spacing:0.5px;margin-bottom:4px;">
+                    Check In
+                  </div>
+                  <div style="font-weight:700;font-size:0.95rem;"
+                    id="detailCheckIn"></div>
+                </div>
+                <div class="col-6 col-md-2">
+                  <div style="color:rgba(255,255,255,0.5);font-size:0.7rem;
+                              font-weight:600;text-transform:uppercase;
+                              letter-spacing:0.5px;margin-bottom:4px;">
+                    Total Bill
+                  </div>
+                  <div style="font-weight:700;font-size:0.95rem;"
+                    id="detailTotal"></div>
+                </div>
+                <div class="col-6 col-md-2">
+                  <div style="color:rgba(255,255,255,0.5);font-size:0.7rem;
+                              font-weight:600;text-transform:uppercase;
+                              letter-spacing:0.5px;margin-bottom:4px;">
+                    Balance Due
+                  </div>
+                  <div style="font-weight:800;font-size:1.1rem;color:#4ade80;"
+                    id="detailBalance"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Payment Form -->
+          <div style="background:#f8fafc;border-radius:14px;padding:22px;
+                      border:1.5px solid #e2e8f0;margin-top:4px;">
+            <div style="font-size:0.75rem;font-weight:700;letter-spacing:1px;
+                        text-transform:uppercase;color:#94a3b8;margin-bottom:16px;">
+              Payment Details
+            </div>
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label">Reservation ID</label>
+                <div style="position:relative;">
+                  <input type="number" id="reservationId" class="form-control"
+                    placeholder="Auto-filled when selected" readonly
+                    style="background:white;padding-left:40px;
+                           border-radius:10px;border:1.5px solid #e2e8f0;
+                           color:#64748b;font-size:0.875rem;">
+                  <span style="position:absolute;left:13px;top:50%;
+                               transform:translateY(-50%);font-size:0.9rem;">
+                    🎫
+                  </span>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Payment Method</label>
+                <div style="display:flex;gap:8px;height:43px;">
+                  <div id="methodCash" onclick="selectMethod('Cash')"
+                    style="flex:1;border:2px solid #1a1a2e;border-radius:10px;
+                           cursor:pointer;background:#1a1a2e;color:white;
+                           transition:all 0.2s;display:flex;align-items:center;
+                           justify-content:center;gap:6px;">
+                    <span style="font-size:0.78rem;">💵</span>
+                    <span style="font-size:0.78rem;font-weight:700;">Cash</span>
+                  </div>
+                  <div id="methodGCash" onclick="selectMethod('GCash')"
+                    style="flex:1;border:2px solid #e2e8f0;border-radius:10px;
+                           cursor:pointer;background:white;color:#64748b;
+                           transition:all 0.2s;display:flex;align-items:center;
+                           justify-content:center;gap:6px;">
+                    <span style="font-size:0.78rem;">📱</span>
+                    <span style="font-size:0.78rem;font-weight:700;">GCash</span>
+                  </div>
+                </div>
+                <input type="hidden" id="paymentMethod" value="Cash">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Amount to Pay</label>
+                <div style="position:relative;">
+                  <span style="position:absolute;left:13px;top:50%;
+                               transform:translateY(-50%);font-weight:700;
+                               color:#16a34a;font-size:0.9rem;">₱</span>
+                  <input type="number" id="paymentAmount" class="form-control"
+                    placeholder="0.00" step="0.01"
+                    style="padding-left:32px;border-radius:10px;
+                           border:1.5px solid #e2e8f0;font-size:0.875rem;
+                           font-weight:600;">
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-4">
+              <button onclick="recordPayment()"
+                style="background:linear-gradient(135deg,#16a34a,#15803d);
+                       color:white;border:none;border-radius:10px;
+                       padding:11px 28px;font-weight:600;font-size:0.875rem;
+                       cursor:pointer;letter-spacing:0.3px;
+                       box-shadow:0 4px 12px rgba(22,163,74,0.25);
+                       transition:all 0.2s;"
+                onmouseover="this.style.opacity='0.9'"
+                onmouseout="this.style.opacity='1'">
+                Record Payment
+              </button>
+            </div>
+            <div id="paymentMsg" class="mt-3"></div>
+          </div>
+
         </div>
       </div>
     </div>
 
-    <!-- Payment Fields -->
-    <div class="row g-3 mt-3">
-      <div class="col-md-3">
-        <label class="form-label">Reservation ID</label>
-        <input type="number" id="reservationId" class="form-control"
-          placeholder="Auto-filled" readonly>
+    <!-- Payment History — Admin and Manager only -->
+    <div id="historySection">
+      <div class="section-title">Payment History</div>
+      <div class="table-card">
+        <div class="table-header"><h6>All Transactions</h6></div>
+        <div class="table-responsive">
+          <table class="table mb-0">
+            <thead>
+              <tr>
+                <th>#</th><th>Guest</th><th>Room</th>
+                <th>Check In</th><th>Check Out</th>
+                <th>Total Bill</th><th>Paid</th>
+                <th>Method</th><th>Date</th><th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="paymentsTable">
+              <tr>
+                <td colspan="10" class="text-center py-4 text-muted">
+                  Loading...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
-      <div class="col-md-3">
-        <label class="form-label">Payment Method</label>
-        <select id="paymentMethod" class="form-select">
-          <option value="Cash">Cash</option>
-          <option value="Card">Card</option>
-          <option value="GCash">GCash</option>
-          <option value="Bank Transfer">Bank Transfer</option>
-        </select>
-      </div>
-      <div class="col-md-3">
-        <label class="form-label">Amount</label>
-        <input type="number" id="paymentAmount" class="form-control"
-          placeholder="0.00" step="0.01">
-      </div>
-      <div class="col-md-3 d-flex align-items-end">
-        <button onclick="recordPayment()" class="btn-pay">
-          Record Payment
-        </button>
-      </div>
-    </div>
-
-    <div id="paymentMsg" class="mt-3"></div>
-
-  </div>
-</div>
-    <!-- Payment History -->
-    <div class="section-title">Payment History</div>
-    <div class="card-custom">
-      <div class="card-head"><h6>All Transactions</h6></div>
-      <table class="table mb-0">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Guest</th>
-            <th>Room</th>
-            <th>Check In</th>
-            <th>Check Out</th>
-            <th>Total Bill</th>
-            <th>Paid</th>
-            <th>Method</th>
-            <th>Date</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody id="paymentsTable">
-          <tr><td colspan="10" class="text-center py-4 text-muted">Loading...</td></tr>
-        </tbody>
-      </table>
     </div>
 
   </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/config.js"></script>
 <script>
-const API = 'http://3.106.251.7:3000';
-  const token = localStorage.getItem('token');
-  const user  = JSON.parse(localStorage.getItem('user') || '{}');
-  if (!token) window.location.href = 'login.html';
+  requireAuth();
+  setupSidebar('payments.html');
+  setupWelcome();
 
-const roleColors = {
-  'Admin':        'background:#fef2f2;color:#dc2626;',
-  'Receptionist': 'background:#f0fdf4;color:#16a34a;',
-  'Manager':      'background:#eff6ff;color:#2563eb;'
-};
-document.getElementById('welcomeMsg').innerHTML = `
-  <span class="user-name">${user.name}</span>
-  <span class="role-tag" style="${roleColors[user.role] || 'background:#f8fafc;color:#64748b;'}">
-    ${user.role}
-  </span>
-`;
+  const role = getUser().role;
 
-async function loadReservationDropdown() {
-  try {
-    const res    = await fetch(`${API}/api/reservations`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-    const all    = await res.json();
-
-    // Only show Booked or Checked In reservations
-    const active = all.filter(r =>
-      r.status === 'Booked' || r.status === 'Checked In'
-    );
-
-    const list = document.getElementById('dropdownList');
-
-    if (active.length === 0) {
-      list.innerHTML = `
-        <div style="padding:16px;text-align:center;
-                    color:#94a3b8;font-size:0.85rem;">
-          No active reservations found
-        </div>`;
-      return;
-    }
-
-    // Check balance for each reservation
-    const itemsWithBalance = await Promise.all(active.map(async r => {
-      try {
-        const payRes  = await fetch(
-          `${API}/api/payments/reservation/${r.id}`,
-          { headers: { 'Authorization': `Bearer ${token}` } }
-        );
-        const payData = await payRes.json();
-        const totalPaid = payData.total_paid
-          ? parseFloat(payData.total_paid) : 0;
-        const balance = parseFloat(r.total_amount) - totalPaid;
-        return { ...r, balance };
-      } catch {
-        return { ...r, balance: parseFloat(r.total_amount) };
-      }
-    }));
-
-    // Only show reservations with remaining balance
-    const unpaid = itemsWithBalance.filter(r => r.balance > 0);
-
-    if (unpaid.length === 0) {
-      list.innerHTML = `
-        <div style="padding:16px;text-align:center;
-                    color:#94a3b8;font-size:0.85rem;">
-          All reservations are fully paid
-        </div>`;
-      return;
-    }
-
-    list.innerHTML = unpaid.map(r => `
-      <div onclick="selectReservation('${r.id}', '${r.guest_name}',
-                    '${r.room_number}', '${r.total_amount}', '${r.status}')"
-        style="padding:14px 16px;cursor:pointer;
-               border-bottom:1px solid #f1f5f9;
-               transition:background 0.15s;"
-        onmouseover="this.style.background='#f8fafc'"
-        onmouseout="this.style.background='white'">
-        <div style="display:flex;justify-content:space-between;
-                    align-items:center;">
-          <div>
-            <span style="font-weight:700;color:#1a1a2e;">
-              ${r.guest_name}
-            </span>
-            <span style="color:#94a3b8;font-size:0.78rem;margin-left:8px;">
-              #${r.id}
-            </span>
-          </div>
-          <span style="font-size:0.72rem;font-weight:600;padding:3px 10px;
-                       border-radius:20px;
-                       ${r.status === 'Booked'
-                         ? 'background:#eff6ff;color:#2563eb;'
-                         : 'background:#f0fdf4;color:#16a34a;'}">
-            ${r.status}
-          </span>
-        </div>
-        <div style="margin-top:4px;display:flex;gap:16px;font-size:0.78rem;">
-          <span style="color:#64748b;">
-            Room <strong>${r.room_number}</strong>
-          </span>
-          <span style="color:#64748b;">
-            Total: <strong>₱${parseFloat(r.total_amount).toLocaleString()}</strong>
-          </span>
-          <span style="color:#dc2626;">
-            Balance: <strong>₱${r.balance.toLocaleString()}</strong>
-          </span>
-        </div>
-      </div>
-    `).join('');
-
-  } catch (err) { console.error(err); }
-}
-
-function toggleDropdown() {
-  const list = document.getElementById('dropdownList');
-  list.style.display = list.style.display === 'none' ? 'block' : 'none';
-}
-
-function selectReservation(id, name, room, total, status) {
-  document.getElementById('reservationDropdown').value = id;
-  document.getElementById('dropdownLabel').textContent =
-    `#${id} — ${name} — Room ${room} — ₱${parseFloat(total).toLocaleString()}`;
-  document.getElementById('dropdownLabel').style.color = '#1a1a2e';
-  document.getElementById('dropdownList').style.display = 'none';
-  onReservationSelect();
-}
-
-// Close dropdown when clicking outside
-document.addEventListener('click', function(e) {
-  const wrapper = document.getElementById('dropdownWrapper');
-  if (wrapper && !wrapper.contains(e.target)) {
-    document.getElementById('dropdownList').style.display = 'none';
+  // Receptionist — hide revenue and history only
+  if (role === 'Receptionist') {
+    document.getElementById('revenueSection').style.display = 'none';
+    document.getElementById('historySection').style.display = 'none';
   }
-});
-
-  async function onReservationSelect() {
-    const id = document.getElementById('reservationDropdown').value;
-    if (!id) {
-      document.getElementById('reservationDetails').classList.add('d-none');
-      document.getElementById('reservationId').value  = '';
-      document.getElementById('paymentAmount').value  = '';
-      return;
-    }
-
-    document.getElementById('reservationId').value = id;
-
-    try {
-      const res     = await fetch(`${API}/api/reservations/${id}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data    = await res.json();
-      const payRes  = await fetch(`${API}/api/payments/reservation/${id}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const payData = await payRes.json();
-
-      const totalPaid = payData.total_paid ? parseFloat(payData.total_paid) : 0;
-      const balance   = parseFloat(data.total_amount) - totalPaid;
-
-      document.getElementById('detailId').textContent    = `#${data.id}`;
-      document.getElementById('detailGuest').textContent = data.guest_name;
-      document.getElementById('detailRoom').textContent  =
-        `${data.room_number} (${data.room_type})`;
-      document.getElementById('detailCheckIn').textContent =
-        new Date(data.check_in_date).toLocaleDateString();
-      document.getElementById('detailTotal').textContent =
-        `₱${parseFloat(data.total_amount).toLocaleString()}`;
-      document.getElementById('detailBalance').textContent =
-        `₱${balance.toLocaleString()}`;
-      document.getElementById('reservationDetails').classList.remove('d-none');
-      document.getElementById('paymentAmount').value =
-        balance > 0 ? balance.toFixed(2) : '0.00';
-    } catch (err) { console.error(err); }
-  }
-
-  async function recordPayment() {
-    const reservation_id = document.getElementById('reservationId').value;
-    const payment_method = document.getElementById('paymentMethod').value;
-    const amount         = document.getElementById('paymentAmount').value;
-    const msgDiv         = document.getElementById('paymentMsg');
-
-    if (!reservation_id || !amount) {
-      msgDiv.innerHTML =
-        '<div class="alert alert-warning" style="border-radius:10px;">Please select a reservation and enter amount.</div>';
-      return;
-    }
-
-    try {
-      const res  = await fetch(`${API}/api/payments`, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body:    JSON.stringify({
-          reservation_id: parseInt(reservation_id),
-          amount:         parseFloat(amount),
-          payment_method
-        })
-      });
-      const data = await res.json();
-
-      if (res.ok) {
-        msgDiv.innerHTML = `
-          <div class="alert alert-success" style="border-radius:10px;">
-            Payment recorded —
-            ₱${parseFloat(data.amount_paid).toLocaleString()} via
-            ${data.payment_method} —
-            Balance: ₱${parseFloat(data.balance).toLocaleString()} —
-            <strong>${data.status}</strong>
-          </div>`;
-        loadPayments();
-        loadReservationDropdown();
-        onReservationSelect();
-      } else {
-        msgDiv.innerHTML =
-          `<div class="alert alert-danger" style="border-radius:10px;">${data.message}</div>`;
-      }
-    } catch (err) {
-      msgDiv.innerHTML =
-        '<div class="alert alert-danger" style="border-radius:10px;">Server error.</div>';
-    }
-  }
-
-  async function loadPayments() {
-    try {
-      const res  = await fetch(`${API}/api/payments`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await res.json();
-
-      const avg = data.total_transactions > 0
-        ? (parseFloat(data.total_revenue) / data.total_transactions).toFixed(2)
-        : '0.00';
-
-      document.getElementById('totalRevenue').textContent =
-        `₱${parseFloat(data.total_revenue || 0).toLocaleString()}`;
-      document.getElementById('totalTransactions').textContent =
-        data.total_transactions || 0;
-      document.getElementById('avgPayment').textContent =
-        `₱${parseFloat(avg).toLocaleString()}`;
-
-      const tbody = document.getElementById('paymentsTable');
-
-      if (!data.payments || data.payments.length === 0) {
-        tbody.innerHTML =
-          '<tr><td colspan="10" class="text-center py-4 text-muted">No payments yet.</td></tr>';
-        return;
-      }
-
-      tbody.innerHTML = data.payments.map(p => `
-        <tr>
-          <td style="color:#94a3b8;font-weight:600;">${p.id}</td>
-          <td><strong>${p.guest_name}</strong></td>
-          <td>${p.room_number}</td>
-          <td>${new Date(p.check_in_date).toLocaleDateString()}</td>
-          <td>${new Date(p.check_out_date).toLocaleDateString()}</td>
-          <td>₱${parseFloat(p.total_amount).toLocaleString()}</td>
-          <td><strong>₱${parseFloat(p.amount).toLocaleString()}</strong></td>
-          <td>${p.payment_method}</td>
-          <td>${new Date(p.payment_date).toLocaleDateString()}</td>
-          <td>
-            <span class="badge-status"
-              style="background:#f0fdf4;color:#16a34a;">
-              ${p.status}
-            </span>
-          </td>
-        </tr>
-      `).join('');
-    } catch (err) { console.error(err); }
-  }
-
-  function logout() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    window.location.href = 'login.html';
-  }
-
-  loadReservationDropdown();
-  loadPayments();
 </script>
+<script src="js/payments.js"></script>
 </body>
 </html>

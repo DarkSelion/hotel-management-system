@@ -10,7 +10,7 @@ const createPayment = async (req, res) => {
     });
   }
 
-  const validMethods = ['Cash', 'Card', 'GCash', 'Bank Transfer'];
+  const validMethods = ['Cash', 'GCash'];
   if (!validMethods.includes(payment_method)) {
     return res.status(400).json({
       message: `Invalid payment method. Use: ${validMethods.join(', ')}`
