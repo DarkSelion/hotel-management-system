@@ -65,24 +65,18 @@
 
         <hr class="step-divider">
         <div class="step-label">Step 2 — Select Room</div>
-        <div class="row g-3">
-          <div class="col-md-8">
-            <label class="form-label">Available Rooms</label>
-            <div style="position:relative;" id="roomDropdownWrapper">
-              <div class="room-dropdown-selected"
-                onclick="toggleRoomDropdown()">
-                <span id="roomDropdownLabel">-- Search rooms first --</span>
-                <span>▼</span>
-              </div>
-              <div class="room-dropdown-list"
-                id="roomDropdownList"
-                style="display:none;">
-              </div>
-              <input type="hidden" id="roomSelect">
-            </div>
+
+        <div id="roomSelectorSection"
+          style="background:#f8fafc;border-radius:12px;
+                 padding:16px;border:1.5px solid #e2e8f0;">
+          <div style="text-align:center;padding:20px;
+                      color:#94a3b8;font-size:0.85rem;">
+            Search rooms first to see availability.
           </div>
         </div>
-        <div id="costPreview" class="mt-3 d-none"></div>
+
+        <div id="selectedRoomInfo" class="d-none"></div>
+        <input type="hidden" id="roomSelect">
 
         <hr class="step-divider">
         <div class="step-label">Step 3 — Guest Information</div>
@@ -164,8 +158,7 @@
   <div style="background:white;border-radius:20px;padding:32px;
               max-width:380px;width:90%;margin:auto;
               box-shadow:0 20px 60px rgba(0,0,0,0.3);text-align:center;">
-    <div id="modalIcon"
-      style="font-size:2.5rem;margin-bottom:16px;"></div>
+    <div id="modalIcon" style="font-size:2.5rem;margin-bottom:16px;"></div>
     <h6 id="modalTitle"
       style="font-weight:700;color:#1a1a2e;
              font-size:1.1rem;margin-bottom:8px;"></h6>
@@ -174,8 +167,8 @@
     <div style="display:flex;gap:10px;justify-content:center;">
       <button onclick="closeModal()"
         style="background:#f1f5f9;color:#64748b;border:none;
-               border-radius:10px;padding:10px 24px;
-               font-weight:600;font-size:0.875rem;cursor:pointer;"
+               border-radius:10px;padding:10px 24px;font-weight:600;
+               font-size:0.875rem;cursor:pointer;"
         onmouseover="this.style.background='#e2e8f0'"
         onmouseout="this.style.background='#f1f5f9'">
         Cancel

@@ -1,14 +1,13 @@
 let modalCallback = null;
+let selectedRoomId = null;
 
 function showToast(message, type) {
   const existing = document.getElementById('toastMsg');
   if (existing) existing.remove();
-
   const colors = {
     success: 'background:#f0fdf4;color:#16a34a;border:1.5px solid #bbf7d0;',
     error:   'background:#fef2f2;color:#dc2626;border:1.5px solid #fecaca;'
   };
-
   const toast = document.createElement('div');
   toast.id = 'toastMsg';
   toast.style.cssText = `
@@ -20,7 +19,6 @@ function showToast(message, type) {
     ${colors[type] || colors.success}`;
   toast.textContent = message;
   document.body.appendChild(toast);
-
   setTimeout(() => {
     toast.style.opacity = '0';
     setTimeout(() => toast.remove(), 300);
@@ -33,25 +31,11 @@ function showModal(type, title, message, callback) {
   const titleEl    = document.getElementById('modalTitle');
   const messageEl  = document.getElementById('modalMessage');
   const confirmBtn = document.getElementById('modalConfirmBtn');
-
   const types = {
-    checkin: {
-      icon:  '🏨',
-      bg:    'linear-gradient(135deg,#16a34a,#15803d)',
-      label: 'Check In'
-    },
-    checkout: {
-      icon:  '🏁',
-      bg:    'linear-gradient(135deg,#475569,#334155)',
-      label: 'Check Out'
-    },
-    cancel: {
-      icon:  '❌',
-      bg:    'linear-gradient(135deg,#dc2626,#b91c1c)',
-      label: 'Cancel Booking'
-    }
+    checkin:  { icon:'🏨', bg:'linear-gradient(135deg,#16a34a,#15803d)', label:'Check In' },
+    checkout: { icon:'🏁', bg:'linear-gradient(135deg,#475569,#334155)', label:'Check Out' },
+    cancel:   { icon:'❌', bg:'linear-gradient(135deg,#dc2626,#b91c1c)', label:'Cancel Booking' }
   };
-
   const t = types[type];
   icon.textContent            = t.icon;
   titleEl.textContent         = title;
@@ -74,7 +58,95 @@ function confirmModal() {
   modalCallback = null;
 }
 
-let selectedRoomId = null;
+function showBookingSuccess(data) {
+  const existing = document.getElementById('bookingSuccessModal');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'bookingSuccessModal';
+  modal.style.cssText = `
+    position:fixed;top:0;left:0;width:100%;height:100%;
+    background:rgba(0,0,0,0.5);z-index:9999;
+    display:flex;align-items:center;justify-content:center;`;
+
+  modal.innerHTML = `
+    <div style="background:white;border-radius:20px;padding:36px;
+                max-width:460px;width:90%;text-align:center;
+                box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+      <div style="font-size:3rem;margin-bottom:12px;">🎉</div>
+      <h5 style="font-weight:800;color:#1a1a2e;margin-bottom:4px;">
+        Booking Confirmed!
+      </h5>
+      <p style="color:#64748b;font-size:0.85rem;margin-bottom:20px;">
+        Reservation has been successfully created.
+      </p>
+      <div style="background:#f8fafc;border-radius:14px;
+                  padding:20px;text-align:left;margin-bottom:20px;">
+        <div style="font-size:0.7rem;font-weight:700;letter-spacing:1px;
+                    text-transform:uppercase;color:#94a3b8;margin-bottom:14px;">
+          Booking Details
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+          <span style="color:#64748b;font-size:0.85rem;">Booking ID</span>
+          <span style="font-weight:700;color:#1a1a2e;">#${data.reservation_id}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+          <span style="color:#64748b;font-size:0.85rem;">Guest Name</span>
+          <span style="font-weight:700;color:#1a1a2e;">
+            ${data.guest.first_name} ${data.guest.last_name}
+          </span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+          <span style="color:#64748b;font-size:0.85rem;">Room</span>
+          <span style="font-weight:700;color:#1a1a2e;">${data.room_number}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+          <span style="color:#64748b;font-size:0.85rem;">Check In</span>
+          <span style="font-weight:700;color:#1a1a2e;">
+            ${new Date(data.check_in_date).toLocaleDateString('en-US',{
+              weekday:'short',month:'long',day:'numeric',year:'numeric'
+            })}
+          </span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+          <span style="color:#64748b;font-size:0.85rem;">Check Out</span>
+          <span style="font-weight:700;color:#1a1a2e;">
+            ${new Date(data.check_out_date).toLocaleDateString('en-US',{
+              weekday:'short',month:'long',day:'numeric',year:'numeric'
+            })}
+          </span>
+        </div>
+        <div style="display:flex;justify-content:space-between;
+                    border-top:1px solid #e2e8f0;padding-top:10px;">
+          <span style="color:#64748b;font-size:0.85rem;">Total Amount</span>
+          <span style="font-weight:800;color:#16a34a;font-size:1.1rem;">
+            ₱${parseFloat(data.total_amount).toLocaleString()}
+          </span>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button onclick="closeBookingSuccess()"
+          style="flex:1;background:#f1f5f9;color:#64748b;border:none;
+                 border-radius:10px;padding:12px;font-weight:600;
+                 font-size:0.875rem;cursor:pointer;">
+          Close
+        </button>
+        <button onclick="closeBookingSuccess()"
+          style="flex:1;background:linear-gradient(135deg,#1a1a2e,#0f3460);
+                 color:white;border:none;border-radius:10px;
+                 padding:12px;font-weight:600;font-size:0.875rem;cursor:pointer;">
+          Done
+        </button>
+      </div>
+    </div>`;
+
+  document.body.appendChild(modal);
+}
+
+function closeBookingSuccess() {
+  const modal = document.getElementById('bookingSuccessModal');
+  if (modal) modal.remove();
+}
 
 async function searchRooms() {
   const checkIn  = document.getElementById('checkinValue').value;
@@ -88,103 +160,143 @@ async function searchRooms() {
       `${API}/api/rooms/availability?check_in_date=${checkIn}&check_out_date=${checkOut}`
     );
     const data = await res.json();
-    const list = document.getElementById('roomDropdownList');
 
     if (!data.rooms || data.rooms.length === 0) {
-      list.innerHTML = `
-        <div style="padding:16px;text-align:center;
-                    color:#94a3b8;font-size:0.85rem;">
-          No available rooms for selected dates
+      document.getElementById('roomSelectorSection').innerHTML = `
+        <div style="text-align:center;padding:20px;color:#94a3b8;font-size:0.85rem;">
+          No available rooms for selected dates.
         </div>`;
-      list.style.display = 'block';
       return;
     }
 
-    list.innerHTML = data.rooms.map(r => `
-      <div onclick="selectRoom(
-              '${r.id}','${r.room_number}','${r.room_type}',
-              ${r.base_price},${r.estimated_total},${r.nights},
-              '${r.description}')"
-        style="padding:14px 16px;cursor:pointer;
-               border-bottom:1px solid #f1f5f9;transition:background 0.15s;"
-        onmouseover="this.style.background='#f8fafc'"
-        onmouseout="this.style.background='white'">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-          <div>
-            <span style="font-weight:700;color:#1a1a2e;">
-              Room ${r.room_number}
-            </span>
-            <span style="color:#94a3b8;font-size:0.78rem;margin-left:8px;">
-              ${r.room_type}
-            </span>
-          </div>
-          <span style="font-weight:700;color:#16a34a;">
-            ₱${parseFloat(r.base_price).toLocaleString()}/night
-          </span>
-        </div>
-        <div style="margin-top:4px;font-size:0.78rem;color:#64748b;">
-          ${r.description} · Total: ₱${parseFloat(r.estimated_total).toLocaleString()}
-        </div>
-      </div>`).join('');
-    list.style.display = 'block';
+    // Group by type
+    const grouped = {};
+    data.rooms.forEach(r => {
+      if (!grouped[r.room_type]) grouped[r.room_type] = [];
+      grouped[r.room_type].push(r);
+    });
+
+    const typeColors = {
+      'Standard': { bg:'#eff6ff', color:'#2563eb', border:'#bfdbfe', selected:'#2563eb' },
+      'Deluxe':   { bg:'#f0fdf4', color:'#16a34a', border:'#bbf7d0', selected:'#16a34a' },
+      'Suite':    { bg:'#fff7ed', color:'#ea580c', border:'#fed7aa', selected:'#ea580c' }
+    };
+    const typeIcons = { 'Standard':'🛏️', 'Deluxe':'🌟', 'Suite':'👑' };
+
+    document.getElementById('roomSelectorSection').innerHTML =
+      Object.keys(grouped).map(type => {
+        const c    = typeColors[type] || { bg:'#f8fafc', color:'#64748b', border:'#e2e8f0' };
+        const icon = typeIcons[type] || '🏨';
+        return `
+          <div style="margin-bottom:20px;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+              <span>${icon}</span>
+              <span style="font-weight:700;color:#1a1a2e;font-size:0.875rem;">
+                ${type} Rooms
+              </span>
+              <span style="background:${c.bg};color:${c.color};
+                           border:1px solid ${c.border};
+                           padding:2px 10px;border-radius:20px;
+                           font-size:0.7rem;font-weight:700;">
+                ${grouped[type].length} available
+              </span>
+              <span style="color:#94a3b8;font-size:0.78rem;margin-left:4px;">
+                ₱${parseFloat(grouped[type][0].base_price).toLocaleString()}/night
+              </span>
+            </div>
+            <div style="display:grid;
+                        grid-template-columns:repeat(auto-fill,minmax(90px,1fr));
+                        gap:8px;">
+              ${grouped[type].map(r => `
+                <div id="room-${r.id}"
+                  onclick="selectRoom('${r.id}','${r.room_number}',
+                           '${r.room_type}',${r.base_price},
+                           ${r.estimated_total},${r.nights},
+                           '${r.description}',${r.floor})"
+                  style="border:2px solid ${c.border};border-radius:10px;
+                         padding:12px 8px;cursor:pointer;background:white;
+                         transition:all 0.2s;text-align:center;">
+                  <div style="font-size:1.2rem;margin-bottom:4px;">🚪</div>
+                  <div style="font-weight:800;color:#1a1a2e;font-size:0.9rem;">
+                    ${r.room_number}
+                  </div>
+                  <div style="font-size:0.65rem;color:#94a3b8;margin-top:2px;">
+                    Floor ${r.floor}
+                  </div>
+                </div>`).join('')}
+            </div>
+          </div>`;
+      }).join('');
+
   } catch (err) {
     showToast('Error searching rooms. Make sure server is running.', 'error');
   }
 }
 
-function toggleRoomDropdown() {
-  const list = document.getElementById('roomDropdownList');
-  list.style.display = list.style.display === 'none' ? 'block' : 'none';
-}
-
-function selectRoom(id, number, type, price, total, nights, desc) {
+function selectRoom(id, number, type, price, total, nights, desc, floor) {
   selectedRoomId = id;
   document.getElementById('roomSelect').value = id;
-  document.getElementById('roomDropdownLabel').textContent =
-    `Room ${number} — ${type} — ₱${parseFloat(price).toLocaleString()}/night`;
-  document.getElementById('roomDropdownLabel').style.color = '#1a1a2e';
-  document.getElementById('roomDropdownList').style.display = 'none';
+
+  // Reset all
+  document.querySelectorAll('[id^="room-"]').forEach(c => {
+    c.style.background  = 'white';
+    c.style.borderColor = '#e2e8f0';
+    c.style.transform   = 'scale(1)';
+  });
+
+  // Highlight selected
+  const selected = document.getElementById(`room-${id}`);
+  if (selected) {
+    selected.style.background  = '#1a1a2e';
+    selected.style.borderColor = '#1a1a2e';
+    selected.style.transform   = 'scale(1.05)';
+    selected.querySelectorAll('div').forEach(d => d.style.color = 'white');
+  }
 
   const subtotal = (total / 1.12).toFixed(2);
   const tax      = (total - subtotal).toFixed(2);
 
-  document.getElementById('costPreview').innerHTML = `
-    <div class="cost-preview">
-      <div style="font-weight:700;color:#1a1a2e;margin-bottom:10px;">
-        Cost Summary — Room ${number}
+  document.getElementById('selectedRoomInfo').innerHTML = `
+    <div style="background:#f0fdf4;border:1.5px solid #bbf7d0;
+                border-radius:12px;padding:16px;margin-top:12px;">
+      <div style="display:flex;justify-content:space-between;
+                  align-items:center;margin-bottom:12px;">
+        <div>
+          <span style="font-weight:700;color:#1a1a2e;">Room ${number}</span>
+          <span style="color:#64748b;font-size:0.8rem;margin-left:8px;">
+            ${type} · Floor ${floor}
+          </span>
+        </div>
+        <span style="background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;
+                     padding:3px 10px;border-radius:20px;font-size:0.72rem;
+                     font-weight:700;">Selected ✓</span>
       </div>
-      <div style="display:flex;flex-wrap:wrap;gap:20px;font-size:0.85rem;">
+      <div style="display:flex;flex-wrap:wrap;gap:16px;font-size:0.82rem;">
         <div>
           <div style="color:#64748b;">Nights</div>
           <div style="font-weight:700;">${nights}</div>
         </div>
         <div>
           <div style="color:#64748b;">Rate/Night</div>
-          <div style="font-weight:700;">
-            ₱${parseFloat(price).toLocaleString()}
-          </div>
+          <div style="font-weight:700;">₱${parseFloat(price).toLocaleString()}</div>
         </div>
         <div>
           <div style="color:#64748b;">Subtotal</div>
-          <div style="font-weight:700;">
-            ₱${parseFloat(subtotal).toLocaleString()}
-          </div>
+          <div style="font-weight:700;">₱${parseFloat(subtotal).toLocaleString()}</div>
         </div>
         <div>
-          <div style="color:#64748b;">Tax 12%</div>
-          <div style="font-weight:700;">
-            ₱${parseFloat(tax).toLocaleString()}
-          </div>
+          <div style="color:#64748b;">VAT 12%</div>
+          <div style="font-weight:700;">₱${parseFloat(tax).toLocaleString()}</div>
         </div>
         <div>
           <div style="color:#64748b;">Total</div>
-          <div style="font-weight:800;color:#16a34a;font-size:1.05rem;">
+          <div style="font-weight:800;color:#16a34a;font-size:1rem;">
             ₱${parseFloat(total).toLocaleString()}
           </div>
         </div>
       </div>
     </div>`;
-  document.getElementById('costPreview').classList.remove('d-none');
+  document.getElementById('selectedRoomInfo').classList.remove('d-none');
 }
 
 async function createBooking() {
@@ -221,13 +333,8 @@ async function createBooking() {
     const data = await res.json();
 
     if (res.ok) {
-      msgDiv.innerHTML = `
-        <div class="alert alert-success" style="border-radius:10px;">
-          ✅ Booking #${data.reservation_id} created for
-          ${data.guest.first_name} ${data.guest.last_name} —
-          Room ${data.room_number} —
-          Total: ₱${parseFloat(data.total_amount).toLocaleString()}
-        </div>`;
+      msgDiv.innerHTML = '';
+      showBookingSuccess(data);
       resetBookingForm();
       loadBookings();
     } else {
@@ -245,15 +352,17 @@ async function createBooking() {
 }
 
 function resetBookingForm() {
-  document.getElementById('firstName').value   = '';
-  document.getElementById('lastName').value    = '';
-  document.getElementById('phone').value       = '';
-  document.getElementById('guestEmail').value  = '';
-  document.getElementById('address').value     = '';
-  document.getElementById('roomSelect').value  = '';
-  document.getElementById('roomDropdownLabel').textContent = '-- Search rooms first --';
-  document.getElementById('roomDropdownLabel').style.color = '#94a3b8';
-  document.getElementById('costPreview').classList.add('d-none');
+  document.getElementById('firstName').value  = '';
+  document.getElementById('lastName').value   = '';
+  document.getElementById('phone').value      = '';
+  document.getElementById('guestEmail').value = '';
+  document.getElementById('address').value    = '';
+  document.getElementById('roomSelect').value = '';
+  document.getElementById('roomSelectorSection').innerHTML = `
+    <div style="text-align:center;padding:20px;color:#94a3b8;font-size:0.85rem;">
+      Search rooms first to see availability.
+    </div>`;
+  document.getElementById('selectedRoomInfo').classList.add('d-none');
   selectedRoomId = null;
   resetCalendar();
 }
@@ -299,20 +408,14 @@ async function loadBookings() {
           ${r.status === 'Booked' ? `
             <button class="action-btn"
               style="background:#f0fdf4;color:#16a34a;"
-              onclick="checkIn(${r.id})">
-              Check In
-            </button>
+              onclick="checkIn(${r.id})">Check In</button>
             <button class="action-btn"
               style="background:#fef2f2;color:#dc2626;"
-              onclick="cancelBooking(${r.id})">
-              Cancel
-            </button>` : ''}
+              onclick="cancelBooking(${r.id})">Cancel</button>` : ''}
           ${r.status === 'Checked In' ? `
             <button class="action-btn"
               style="background:#f8fafc;color:#64748b;"
-              onclick="checkOut(${r.id})">
-              Check Out
-            </button>` : ''}
+              onclick="checkOut(${r.id})">Check Out</button>` : ''}
           ${r.status === 'Checked Out' || r.status === 'Cancelled'
             ? '<span style="color:#94a3b8;font-size:0.78rem;">No actions</span>'
             : ''}
@@ -322,73 +425,51 @@ async function loadBookings() {
 }
 
 async function checkIn(id) {
-  showModal(
-    'checkin',
-    'Check In Guest',
+  showModal('checkin', 'Check In Guest',
     'Are you sure you want to check in this guest?',
     async () => {
       try {
         const res  = await fetch(`${API}/api/reservations/${id}/checkin`, {
-          method: 'PATCH',
-          headers: { 'Authorization': `Bearer ${getToken()}` }
+          method: 'PATCH', headers: { 'Authorization': `Bearer ${getToken()}` }
         });
         const data = await res.json();
         showToast(data.message, 'success');
         loadBookings();
-      } catch (err) {
-        showToast('Server error.', 'error');
-      }
+      } catch { showToast('Server error.', 'error'); }
     }
   );
 }
 
 async function checkOut(id) {
-  showModal(
-    'checkout',
-    'Check Out Guest',
+  showModal('checkout', 'Check Out Guest',
     'Are you sure you want to check out this guest?',
     async () => {
       try {
         const res  = await fetch(`${API}/api/reservations/${id}/checkout`, {
-          method: 'PATCH',
-          headers: { 'Authorization': `Bearer ${getToken()}` }
+          method: 'PATCH', headers: { 'Authorization': `Bearer ${getToken()}` }
         });
         const data = await res.json();
         showToast(data.message, 'success');
         loadBookings();
-      } catch (err) {
-        showToast('Server error.', 'error');
-      }
+      } catch { showToast('Server error.', 'error'); }
     }
   );
 }
 
 async function cancelBooking(id) {
-  showModal(
-    'cancel',
-    'Cancel Booking',
+  showModal('cancel', 'Cancel Booking',
     'Are you sure you want to cancel this booking? This cannot be undone.',
     async () => {
       try {
         const res  = await fetch(`${API}/api/reservations/${id}/cancel`, {
-          method: 'PATCH',
-          headers: { 'Authorization': `Bearer ${getToken()}` }
+          method: 'PATCH', headers: { 'Authorization': `Bearer ${getToken()}` }
         });
         const data = await res.json();
         showToast(data.message, 'success');
         loadBookings();
-      } catch (err) {
-        showToast('Server error.', 'error');
-      }
+      } catch { showToast('Server error.', 'error'); }
     }
   );
 }
-
-document.addEventListener('click', function(e) {
-  const wrapper = document.getElementById('roomDropdownWrapper');
-  if (wrapper && !wrapper.contains(e.target)) {
-    document.getElementById('roomDropdownList').style.display = 'none';
-  }
-});
 
 loadBookings();

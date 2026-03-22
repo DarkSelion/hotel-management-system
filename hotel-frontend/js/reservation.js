@@ -24,28 +24,74 @@ async function searchRooms() {
       return;
     }
 
-    roomList.innerHTML = data.rooms.map(r => `
-      <div class="room-card" id="room-${r.id}"
-        onclick="selectRoom(${r.id},'${r.room_number}','${r.room_type}',
-                 ${r.base_price},${r.estimated_total},${r.nights},
-                 '${r.description}',${r.floor})">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-          <div>
-            <div style="font-weight:700;color:#1a1a2e;">
-              Room ${r.room_number} — ${r.room_type}
+    // Group rooms by type
+const grouped = {};
+data.rooms.forEach(r => {
+  if (!grouped[r.room_type]) grouped[r.room_type] = [];
+  grouped[r.room_type].push(r);
+});
+
+const typeColors = {
+  'Standard': { bg:'#eff6ff', color:'#2563eb', border:'#bfdbfe' },
+  'Deluxe':   { bg:'#f0fdf4', color:'#16a34a', border:'#bbf7d0' },
+  'Suite':    { bg:'#fff7ed', color:'#ea580c', border:'#fed7aa' }
+};
+
+const typeIcons = {
+  'Standard': '🛏️',
+  'Deluxe':   '🌟',
+  'Suite':    '👑'
+};
+
+roomList.innerHTML = Object.keys(grouped).map(type => {
+  const c = typeColors[type] || { bg:'#f8fafc', color:'#64748b', border:'#e2e8f0' };
+  const icon = typeIcons[type] || '🏨';
+  return `
+    <div style="margin-bottom:20px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+        <span style="font-size:1.1rem;">${icon}</span>
+        <span style="font-weight:700;color:#1a1a2e;font-size:0.95rem;">
+          ${type} Rooms
+        </span>
+        <span style="background:${c.bg};color:${c.color};
+                     border:1px solid ${c.border};
+                     padding:2px 10px;border-radius:20px;font-size:0.72rem;
+                     font-weight:700;">
+          ${grouped[type].length} available
+        </span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;">
+        ${grouped[type].map(r => `
+          <div id="room-${r.id}"
+            onclick="selectRoom(${r.id},'${r.room_number}','${r.room_type}',
+                     ${r.base_price},${r.estimated_total},${r.nights},
+                     '${r.description}',${r.floor})"
+            style="border:2px solid ${c.border};border-radius:12px;
+                   padding:14px;cursor:pointer;background:white;
+                   transition:all 0.2s;text-align:center;"
+            onmouseover="this.style.background='${c.bg}';
+                         this.style.borderColor='${c.color}'"
+            onmouseout="if(!this.classList.contains('selected')){
+                          this.style.background='white';
+                          this.style.borderColor='${c.border}';}">
+            <div style="font-size:1.5rem;margin-bottom:6px;">🚪</div>
+            <div style="font-weight:800;color:#1a1a2e;font-size:1rem;">
+              ${r.room_number}
             </div>
-            <div style="color:#64748b;font-size:0.8rem;margin-top:2px;">
-              ${r.description} · Floor ${r.floor}
+            <div style="font-size:0.72rem;color:#64748b;margin-top:2px;">
+              Floor ${r.floor}
             </div>
-          </div>
-          <div style="text-align:right;">
-            <div style="font-weight:800;color:#16a34a;font-size:1.05rem;">
-              ₱${parseFloat(r.base_price).toLocaleString()}
+            <div style="margin-top:8px;padding-top:8px;
+                        border-top:1px solid ${c.border};">
+              <div style="font-weight:700;color:${c.color};font-size:0.9rem;">
+                ₱${parseFloat(r.base_price).toLocaleString()}
+              </div>
+              <div style="font-size:0.7rem;color:#94a3b8;">per night</div>
             </div>
-            <div style="font-size:0.75rem;color:#94a3b8;">per night</div>
-          </div>
-        </div>
-      </div>`).join('');
+          </div>`).join('')}
+      </div>
+    </div>`;
+}).join('');
 
     document.getElementById('step2').scrollIntoView({ behavior: 'smooth' });
   } catch (err) {
@@ -56,8 +102,21 @@ async function searchRooms() {
 function selectRoom(id, number, type, price, total, nights, desc, floor) {
   selectedRoomId = id;
   selectedRoom   = { id, number, type, price, total, nights };
-  document.querySelectorAll('.room-card').forEach(c => c.classList.remove('selected'));
-  document.getElementById(`room-${id}`).classList.add('selected');
+  // Reset all room cards
+document.querySelectorAll('[id^="room-"]').forEach(c => {
+  c.style.background   = 'white';
+  c.style.borderColor  = '#e2e8f0';
+  c.style.boxShadow    = 'none';
+});
+
+// Highlight selected
+const selected = document.getElementById(`room-${id}`);
+if (selected) {
+  selected.style.background  = '#1a1a2e';
+  selected.style.borderColor = '#1a1a2e';
+  selected.style.boxShadow   = '0 4px 14px rgba(26,26,46,0.3)';
+  selected.querySelector('div:nth-child(2)').style.color = 'white';
+}
 
   const subtotal = (total / 1.12).toFixed(2);
   const tax      = (total - subtotal).toFixed(2);
