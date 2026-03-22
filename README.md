@@ -233,3 +233,7 @@ Use Postman to register accounts:
 - Mobile application
 - AI-based dynamic pricing
 - CloudFront HTTPS support
+
+
+
+Server Error Create .env file
