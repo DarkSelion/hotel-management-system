@@ -171,10 +171,11 @@ async function recordPayment() {
   }
 
   try {
+    // Step 1: Record payment
     const res  = await fetch(`${API}/api/payments`, {
       method:  'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type':  'application/json',
         'Authorization': `Bearer ${getToken()}`
       },
       body: JSON.stringify({
@@ -186,22 +187,43 @@ async function recordPayment() {
     const data = await res.json();
 
     if (res.ok) {
-      msgDiv.innerHTML = `
-        <div class="alert alert-success" style="border-radius:10px;">
-          ✅ Payment of ₱${parseFloat(data.amount_paid).toLocaleString()}
-          via ${data.payment_method} recorded —
-          Balance: ₱${parseFloat(data.balance).toLocaleString()} —
-          <strong>${data.status}</strong>
-        </div>`;
+      // Step 2: Check if reservation status is Booked then auto check in
+      const resDetails = await fetch(
+        `${API}/api/reservations/${reservation_id}`, {
+        headers: { 'Authorization': `Bearer ${getToken()}` }
+      });
+      const resData = await resDetails.json();
+
+      let checkedIn = false;
+      if (resData.status === 'Booked') {
+        const checkInRes = await fetch(
+          `${API}/api/reservations/${reservation_id}/checkin`, {
+          method:  'PATCH',
+          headers: { 'Authorization': `Bearer ${getToken()}` }
+        });
+        if (checkInRes.ok) checkedIn = true;
+      }
+
+      // Step 3: Show success modal
+      showPaymentSuccess(
+        data,
+        resData,
+        checkedIn,
+        payment_method,
+        amount
+      );
+
+      // Step 4: Reset form
       loadReservationDropdown();
-      loadPayments();
+      if (getUser().role !== 'Receptionist') loadPayments();
       document.getElementById('reservationDetails').classList.add('d-none');
-      document.getElementById('reservationId').value  = '';
-      document.getElementById('paymentAmount').value  = '';
+      document.getElementById('reservationId').value   = '';
+      document.getElementById('paymentAmount').value   = '';
       document.getElementById('dropdownLabel').textContent =
         '-- Select a guest reservation --';
       document.getElementById('dropdownLabel').style.color = '#94a3b8';
       document.getElementById('reservationDropdown').value = '';
+
     } else {
       msgDiv.innerHTML = `
         <div class="alert alert-danger" style="border-radius:10px;">
@@ -215,6 +237,123 @@ async function recordPayment() {
       </div>`;
   }
 }
+
+function showPaymentSuccess(payData, resData, checkedIn, method, amount) {
+  const existing = document.getElementById('paymentSuccessModal');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'paymentSuccessModal';
+  modal.style.cssText = `
+    position:fixed;top:0;left:0;width:100%;height:100%;
+    background:rgba(0,0,0,0.5);z-index:9999;
+    display:flex;align-items:center;justify-content:center;`;
+
+  modal.innerHTML = `
+    <div style="background:white;border-radius:20px;padding:36px;
+                max-width:460px;width:90%;text-align:center;
+                box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+
+      <div style="font-size:3rem;margin-bottom:12px;">
+        ${checkedIn ? '🏨' : '✅'}
+      </div>
+
+      <h5 style="font-weight:800;color:#1a1a2e;margin-bottom:6px;">
+        Payment Recorded!
+      </h5>
+
+      ${checkedIn ? `
+        <div style="background:#f0fdf4;border:1.5px solid #bbf7d0;
+                    border-radius:10px;padding:10px 16px;
+                    margin:12px 0;display:flex;align-items:center;
+                    justify-content:center;gap:8px;">
+          <span style="font-size:1rem;">✅</span>
+          <span style="color:#16a34a;font-weight:700;font-size:0.9rem;">
+            Guest has been automatically checked in
+          </span>
+        </div>` : ''}
+
+      <div style="background:#f8fafc;border-radius:14px;
+                  padding:20px;margin:16px 0;text-align:left;">
+
+        <div style="font-size:0.7rem;font-weight:700;letter-spacing:1px;
+                    text-transform:uppercase;color:#94a3b8;margin-bottom:14px;">
+          Payment Summary
+        </div>
+
+        <div style="display:flex;justify-content:space-between;
+                    margin-bottom:10px;">
+          <span style="color:#64748b;font-size:0.85rem;">Guest</span>
+          <span style="font-weight:600;font-size:0.85rem;">
+            ${resData.guest_name}
+          </span>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;
+                    margin-bottom:10px;">
+          <span style="color:#64748b;font-size:0.85rem;">Room</span>
+          <span style="font-weight:600;font-size:0.85rem;">
+            ${resData.room_number} (${resData.room_type})
+          </span>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;
+                    margin-bottom:10px;">
+          <span style="color:#64748b;font-size:0.85rem;">Payment Method</span>
+          <span style="font-weight:600;font-size:0.85rem;">${method}</span>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;
+                    margin-bottom:10px;">
+          <span style="color:#64748b;font-size:0.85rem;">Amount Paid</span>
+          <span style="font-weight:700;color:#16a34a;font-size:0.9rem;">
+            ₱${parseFloat(amount).toLocaleString()}
+          </span>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;
+                    margin-bottom:10px;">
+          <span style="color:#64748b;font-size:0.85rem;">Balance</span>
+          <span style="font-weight:700;
+                       color:${parseFloat(payData.balance) <= 0
+                         ? '#16a34a' : '#dc2626'};
+                       font-size:0.9rem;">
+            ₱${parseFloat(payData.balance).toLocaleString()}
+          </span>
+        </div>
+
+        <div style="border-top:1px solid #e2e8f0;padding-top:10px;
+                    display:flex;justify-content:space-between;">
+          <span style="color:#64748b;font-size:0.85rem;">Status</span>
+          <span style="font-weight:700;font-size:0.85rem;
+                       padding:4px 12px;border-radius:20px;
+                       ${checkedIn
+                         ? 'background:#f0fdf4;color:#16a34a;'
+                         : 'background:#eff6ff;color:#2563eb;'}">
+            ${checkedIn ? 'Checked In' : 'Booked'}
+          </span>
+        </div>
+
+      </div>
+
+      <button onclick="closePaymentSuccess()"
+        style="background:linear-gradient(135deg,#1a1a2e,#0f3460);
+               color:white;border:none;border-radius:10px;
+               padding:12px 32px;font-weight:600;
+               font-size:0.875rem;cursor:pointer;width:100%;">
+        Done
+      </button>
+
+    </div>`;
+
+  document.body.appendChild(modal);
+}
+
+function closePaymentSuccess() {
+  const modal = document.getElementById('paymentSuccessModal');
+  if (modal) modal.remove();
+}
+
 
 async function loadPayments() {
   try {
