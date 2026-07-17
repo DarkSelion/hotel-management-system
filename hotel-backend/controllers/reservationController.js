@@ -1,13 +1,12 @@
 const db = require('../config/db');
-
-// Helper: get config value from system_configurations
-const getConfig = async (key) => {
-  const [rows] = await db.query(
-    'SELECT config_value FROM system_configurations WHERE config_key = ?',
-    [key]
-  );
-  return rows.length > 0 ? rows[0].config_value : null;
-};
+const { getConfig } = require('../utils/cache');
+const {
+  isCheckInDue,
+  getTotalPaid,
+  performCheckIn,
+  recordPayment,
+  tryAutoCheckIn
+} = require('../utils/reservationHelpers');
 
 // Create a new reservation
 const createReservation = async (req, res) => {
@@ -19,20 +18,27 @@ const createReservation = async (req, res) => {
     address,
     room_id,
     check_in_date,
-    check_out_date
+    check_out_date,
+    initial_payment
   } = req.body;
 
-  // Validate required fields
   if (!first_name || !last_name || !room_id || !check_in_date || !check_out_date) {
     return res.status(400).json({
       message: 'first_name, last_name, room_id, check_in_date, and check_out_date are required.'
     });
   }
 
-  // Validate dates
   if (new Date(check_out_date) <= new Date(check_in_date)) {
     return res.status(400).json({
       message: 'check_out_date must be after check_in_date.'
+    });
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  if (new Date(check_in_date) < today) {
+    return res.status(400).json({
+      message: 'check_in_date cannot be in the past.'
     });
   }
 
@@ -41,7 +47,6 @@ const createReservation = async (req, res) => {
   try {
     await connection.beginTransaction();
 
-    // Step 1: Check room is still available (prevent race conditions)
     const [conflict] = await connection.query(
       `SELECT id FROM reservations
        WHERE room_id = ?
@@ -58,12 +63,11 @@ const createReservation = async (req, res) => {
       });
     }
 
-    // Step 2: Get room price
     const [roomRows] = await connection.query(
       `SELECT r.id, r.room_number, r.status, rt.base_price
        FROM rooms r
        JOIN room_types rt ON r.room_type_id = rt.id
-       WHERE r.id = ?`,
+       WHERE r.id = ? FOR UPDATE`,
       [room_id]
     );
 
@@ -72,21 +76,21 @@ const createReservation = async (req, res) => {
       return res.status(404).json({ message: 'Room not found.' });
     }
 
-    if (roomRows[0].status !== 'Available') {
+    if (roomRows[0].status === 'Under Maintenance') {
       await connection.rollback();
-      return res.status(409).json({ message: 'Room is not available.' });
+      return res.status(409).json({ message: 'Room is under maintenance.' });
     }
 
-    // Step 3: Calculate total amount with tax
-    const nights = (new Date(check_out_date) - new Date(check_in_date))
-                   / (1000 * 60 * 60 * 24);
+    const nights = Math.round(
+      (new Date(check_out_date) - new Date(check_in_date))
+      / (1000 * 60 * 60 * 24)
+    );
     const basePrice   = parseFloat(roomRows[0].base_price);
-    const taxRate     = parseFloat(await getConfig('tax_rate_percent') || 0) / 100;
+    const taxRate     = parseFloat(await getConfig('tax_rate_percent') || '12') / 100;
     const subtotal    = nights * basePrice;
     const taxAmount   = subtotal * taxRate;
     const totalAmount = subtotal + taxAmount;
 
-    // Step 4: Create or find guest
     let guestId;
     if (email) {
       const [existingGuest] = await connection.query(
@@ -95,7 +99,6 @@ const createReservation = async (req, res) => {
       );
       if (existingGuest.length > 0) {
         guestId = existingGuest[0].id;
-        // Update guest info in case it changed
         await connection.query(
           `UPDATE guests SET first_name=?, last_name=?, phone=?, address=?
            WHERE id=?`,
@@ -112,25 +115,39 @@ const createReservation = async (req, res) => {
       guestId = newGuest.insertId;
     }
 
-    // Step 5: Create reservation
     const [reservation] = await connection.query(
-      `INSERT INTO reservations 
+      `INSERT INTO reservations
         (guest_id, room_id, check_in_date, check_out_date, status, total_amount)
        VALUES (?, ?, ?, ?, 'Booked', ?)`,
       [guestId, room_id, check_in_date, check_out_date, totalAmount]
     );
 
-    // Step 6: Mark room as Occupied
-    //await connection.query(
-    // "UPDATE rooms SET status = 'Occupied' WHERE id = ?",
-    //    [room_id]
-    //  );
+    const reservationId = reservation.insertId;
+    let paymentInfo = null;
+    let checkedIn = false;
+
+    if (initial_payment?.amount && initial_payment?.payment_method) {
+      paymentInfo = await recordPayment(connection, {
+        reservationId,
+        amount: initial_payment.amount,
+        paymentMethod: initial_payment.payment_method
+      });
+
+      checkedIn = await tryAutoCheckIn(connection, {
+        id: reservationId,
+        status: 'Booked',
+        check_in_date,
+        room_id
+      });
+    }
 
     await connection.commit();
 
     res.status(201).json({
-      message: 'Reservation created successfully.',
-      reservation_id: reservation.insertId,
+      message: checkedIn
+        ? 'Reservation created and guest checked in successfully.'
+        : 'Reservation created successfully.',
+      reservation_id: reservationId,
       guest: { id: guestId, first_name, last_name },
       room_number: roomRows[0].room_number,
       check_in_date,
@@ -138,11 +155,25 @@ const createReservation = async (req, res) => {
       nights,
       subtotal:     subtotal.toFixed(2),
       tax_amount:   taxAmount.toFixed(2),
-      total_amount: totalAmount.toFixed(2)
+      total_amount: totalAmount.toFixed(2),
+      status:       checkedIn ? 'Checked In' : 'Booked',
+      checked_in:   checkedIn,
+      payment:      paymentInfo
     });
 
   } catch (err) {
     await connection.rollback();
+
+    if (err.code === 'EXCEEDS_BALANCE') {
+      return res.status(400).json({
+        message: err.message,
+        remaining_balance: err.remaining_balance
+      });
+    }
+    if (['INVALID_METHOD', 'INVALID_AMOUNT', 'ALREADY_PAID', 'CANCELLED'].includes(err.code)) {
+      return res.status(400).json({ message: err.message });
+    }
+
     res.status(500).json({ message: 'Server error.', error: err.message });
   } finally {
     connection.release();
@@ -164,7 +195,8 @@ const getAllReservations = async (req, res) => {
         g.phone,
         g.email,
         r.room_number,
-        rt.name AS room_type
+        rt.name AS room_type,
+        (SELECT COALESCE(SUM(amount), 0) FROM payments WHERE reservation_id = res.id) AS total_paid
       FROM reservations res
       JOIN guests g       ON res.guest_id = g.id
       JOIN rooms r        ON res.room_id  = r.id
@@ -190,7 +222,8 @@ const getReservationById = async (req, res) => {
         g.address,
         r.room_number,
         rt.name       AS room_type,
-        rt.base_price
+        rt.base_price,
+        (SELECT COALESCE(SUM(amount), 0) FROM payments WHERE reservation_id = res.id) AS total_paid
       FROM reservations res
       JOIN guests g       ON res.guest_id = g.id
       JOIN rooms r        ON res.room_id  = r.id
@@ -201,7 +234,16 @@ const getReservationById = async (req, res) => {
     if (rows.length === 0) {
       return res.status(404).json({ message: 'Reservation not found.' });
     }
-    res.json(rows[0]);
+
+    const row = rows[0];
+    const totalAmount = parseFloat(row.total_amount);
+    const totalPaid = parseFloat(row.total_paid || 0);
+
+    res.json({
+      ...row,
+      balance: (totalAmount - totalPaid).toFixed(2),
+      payment_status: totalAmount - totalPaid <= 0 ? 'Fully Paid' : totalPaid > 0 ? 'Partially Paid' : 'Unpaid'
+    });
   } catch (err) {
     res.status(500).json({ message: 'Server error.', error: err.message });
   }
@@ -234,16 +276,16 @@ const cancelReservation = async (req, res) => {
       return res.status(400).json({ message: 'Cannot cancel a completed reservation.' });
     }
 
-    // Cancel reservation
     await connection.query(
       "UPDATE reservations SET status = 'Cancelled' WHERE id = ?", [id]
     );
 
-    // Free up the room
-    await connection.query(
-      "UPDATE rooms SET status = 'Available' WHERE id = ?",
-      [rows[0].room_id]
-    );
+    if (rows[0].status === 'Checked In') {
+      await connection.query(
+        "UPDATE rooms SET status = 'Available' WHERE id = ?",
+        [rows[0].room_id]
+      );
+    }
 
     await connection.commit();
     res.json({ message: 'Reservation cancelled successfully.' });
@@ -256,36 +298,89 @@ const cancelReservation = async (req, res) => {
   }
 };
 
-// Check in a guest
+// Check in a guest (optionally with payment in one step)
 const checkIn = async (req, res) => {
   const { id } = req.params;
+  const { amount, payment_method } = req.body || {};
+  const connection = await db.getConnection();
+
   try {
-    const [rows] = await db.query(
+    await connection.beginTransaction();
+
+    const [rows] = await connection.query(
       'SELECT * FROM reservations WHERE id = ?', [id]
     );
+
     if (rows.length === 0) {
+      await connection.rollback();
       return res.status(404).json({ message: 'Reservation not found.' });
     }
-    if (rows[0].status !== 'Booked') {
+
+    const reservation = rows[0];
+
+    if (reservation.status !== 'Booked') {
+      await connection.rollback();
       return res.status(400).json({
-        message: `Cannot check in. Current status is: ${rows[0].status}`
+        message: `Cannot check in. Current status is: ${reservation.status}`
       });
     }
 
-    // Mark reservation as Checked In
-    await db.query(
-      "UPDATE reservations SET status = 'Checked In' WHERE id = ?", [id]
-    );
+    if (!isCheckInDue(reservation.check_in_date)) {
+      await connection.rollback();
+      return res.status(400).json({
+        message: 'Check-in is only available on or after the scheduled check-in date.'
+      });
+    }
 
-    // Now mark room as Occupied
-    await db.query(
-      "UPDATE rooms SET status = 'Occupied' WHERE id = ?",
-      [rows[0].room_id]
-    );
+    let paymentInfo = null;
+    if (amount && payment_method) {
+      paymentInfo = await recordPayment(connection, {
+        reservationId: id,
+        amount,
+        paymentMethod: payment_method
+      });
+    }
 
-    res.json({ message: 'Guest checked in successfully.' });
+    const totalPaid = await getTotalPaid(connection, id);
+    if (totalPaid <= 0) {
+      await connection.rollback();
+      return res.status(400).json({
+        message: 'Payment is required before check-in.'
+      });
+    }
+
+    await performCheckIn(connection, reservation);
+    await connection.commit();
+
+    const totalAmount = parseFloat(reservation.total_amount);
+    const balance = totalAmount - totalPaid;
+
+    res.json({
+      message: 'Guest checked in successfully.',
+      checked_in: true,
+      reservation_id: parseInt(id, 10),
+      status: 'Checked In',
+      total_amount: totalAmount.toFixed(2),
+      total_paid: totalPaid.toFixed(2),
+      balance: balance.toFixed(2),
+      payment: paymentInfo
+    });
   } catch (err) {
+    await connection.rollback();
+
+    if (err.code === 'EXCEEDS_BALANCE') {
+      return res.status(400).json({
+        message: err.message,
+        remaining_balance: err.remaining_balance
+      });
+    }
+    if (['INVALID_METHOD', 'INVALID_AMOUNT', 'ALREADY_PAID', 'CANCELLED'].includes(err.code)) {
+      return res.status(400).json({ message: err.message });
+    }
+
     res.status(500).json({ message: 'Server error.', error: err.message });
+  } finally {
+    connection.release();
   }
 };
 
@@ -311,12 +406,10 @@ const checkOut = async (req, res) => {
       });
     }
 
-    // Mark reservation as checked out
     await connection.query(
       "UPDATE reservations SET status = 'Checked Out' WHERE id = ?", [id]
     );
 
-    // Free up the room
     await connection.query(
       "UPDATE rooms SET status = 'Available' WHERE id = ?",
       [rows[0].room_id]

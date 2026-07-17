@@ -2,19 +2,21 @@ let selectedRoomId = null;
 
 async function loadRooms() {
   try {
+    const container = document.getElementById('roomsGrid');
     const res   = await fetch(`${API}/api/rooms`, {
       headers: { 'Authorization': `Bearer ${getToken()}` }
     });
+    if (!res.ok) {
+      container.innerHTML = `<div class="text-center py-4 text-danger">Error loading rooms.</div>`;
+      return;
+    }
     const rooms = await res.json();
-    const tbody = document.getElementById('roomsTable');
 
-    if (rooms.length === 0) {
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="6" class="text-center py-4 text-muted">
-            No rooms found.
-          </td>
-        </tr>`;
+    if (!Array.isArray(rooms) || rooms.length === 0) {
+      container.innerHTML = `
+        <div class="text-center py-4 text-muted">
+          No rooms found.
+        </div>`;
       return;
     }
 
@@ -32,7 +34,6 @@ async function loadRooms() {
     };
     const typeIcons = { 'Standard':'🛏️', 'Deluxe':'🌟', 'Suite':'👑' };
 
-    const container = document.getElementById('roomsGrid');
     container.innerHTML = Object.keys(grouped).map(type => {
       const c    = typeColors[type] || { bg:'#f8fafc', color:'#64748b', border:'#e2e8f0' };
       const icon = typeIcons[type] || '🏨';
@@ -78,14 +79,14 @@ async function loadRooms() {
                 <div style="border:2px solid #e2e8f0;border-radius:12px;
                             padding:14px;background:white;text-align:center;
                             transition:all 0.2s;cursor:pointer;${statusStyle}"
-                  onclick="openStatusModal(${r.id},'${r.room_number}','${r.status}')"
+                  onclick="openStatusModal(${r.id},'${escapeAttr(r.room_number)}','${escapeAttr(r.status)}')"
                   onmouseover="this.style.transform='translateY(-2px)';
                                this.style.boxShadow='0 4px 14px rgba(0,0,0,0.08)'"
                   onmouseout="this.style.transform='translateY(0)';
                               this.style.boxShadow='none'">
                   <div style="font-size:1.4rem;margin-bottom:6px;">🚪</div>
                   <div style="font-weight:800;color:#1a1a2e;font-size:1rem;">
-                    ${r.room_number}
+                    ${escapeHtml(r.room_number)}
                   </div>
                   <div style="font-size:0.65rem;color:#94a3b8;margin-top:2px;">
                     Floor ${r.floor}

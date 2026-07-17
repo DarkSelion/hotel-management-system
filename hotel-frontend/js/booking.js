@@ -1,5 +1,6 @@
 let modalCallback = null;
 let selectedRoomId = null;
+let currentTaxRatePercent = 12; // Dynamic default
 
 function showToast(message, type) {
   const existing = document.getElementById('toastMsg');
@@ -32,9 +33,9 @@ function showModal(type, title, message, callback) {
   const messageEl  = document.getElementById('modalMessage');
   const confirmBtn = document.getElementById('modalConfirmBtn');
   const types = {
-    checkin:  { icon:'🏨', bg:'linear-gradient(135deg,#16a34a,#15803d)', label:'Check In' },
-    checkout: { icon:'🏁', bg:'linear-gradient(135deg,#475569,#334155)', label:'Check Out' },
-    cancel:   { icon:'❌', bg:'linear-gradient(135deg,#dc2626,#b91c1c)', label:'Cancel Booking' }
+    checkin:  { icon:'✅', bg:'linear-gradient(135deg,#16a34a,#15803d)', label:'Check In' },
+    checkout: { icon:'🚪', bg:'linear-gradient(135deg,#475569,#334155)', label:'Check Out' },
+    cancel:   { icon:'❌', bg:'linear-gradient(135deg,#dc2626,#991b1b)', label:'Cancel' }
   };
   const t = types[type];
   icon.textContent            = t.icon;
@@ -75,10 +76,12 @@ function showBookingSuccess(data) {
                 box-shadow:0 20px 60px rgba(0,0,0,0.3);">
       <div style="font-size:3rem;margin-bottom:12px;">🎉</div>
       <h5 style="font-weight:800;color:#1a1a2e;margin-bottom:4px;">
-        Booking Confirmed!
+        ${data.checked_in ? 'Booking Confirmed & Checked In!' : 'Booking Confirmed!'}
       </h5>
       <p style="color:#64748b;font-size:0.85rem;margin-bottom:20px;">
-        Reservation has been successfully created.
+        ${data.checked_in
+          ? 'Reservation created, payment recorded, and guest is now checked in.'
+          : 'Reservation has been successfully created.'}
       </p>
       <div style="background:#f8fafc;border-radius:14px;
                   padding:20px;text-align:left;margin-bottom:20px;">
@@ -103,21 +106,31 @@ function showBookingSuccess(data) {
         <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
           <span style="color:#64748b;font-size:0.85rem;">Check In</span>
           <span style="font-weight:700;color:#1a1a2e;">
-            ${new Date(data.check_in_date).toLocaleDateString('en-US',{
-              weekday:'short',month:'long',day:'numeric',year:'numeric'
-            })}
+            ${fmtDisplay(data.check_in_date)}
           </span>
         </div>
         <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
           <span style="color:#64748b;font-size:0.85rem;">Check Out</span>
           <span style="font-weight:700;color:#1a1a2e;">
-            ${new Date(data.check_out_date).toLocaleDateString('en-US',{
-              weekday:'short',month:'long',day:'numeric',year:'numeric'
-            })}
+            ${fmtDisplay(data.check_out_date)}
           </span>
         </div>
         <div style="display:flex;justify-content:space-between;
                     border-top:1px solid #e2e8f0;padding-top:10px;">
+          <span style="color:#64748b;font-size:0.85rem;">Status</span>
+          <span style="font-weight:700;color:#1a1a2e;">
+            ${data.status || 'Booked'}
+          </span>
+        </div>
+        ${data.payment ? `
+        <div style="display:flex;justify-content:space-between;margin-top:10px;">
+          <span style="color:#64748b;font-size:0.85rem;">Amount Paid</span>
+          <span style="font-weight:700;color:#16a34a;">
+            ₱${parseFloat(data.payment.amount_paid).toLocaleString()}
+          </span>
+        </div>` : ''}
+        <div style="display:flex;justify-content:space-between;
+                    border-top:1px solid #e2e8f0;padding-top:10px;margin-top:10px;">
           <span style="color:#64748b;font-size:0.85rem;">Total Amount</span>
           <span style="font-weight:800;color:#16a34a;font-size:1.1rem;">
             ₱${parseFloat(data.total_amount).toLocaleString()}
@@ -160,6 +173,7 @@ async function searchRooms() {
       `${API}/api/rooms/availability?check_in_date=${checkIn}&check_out_date=${checkOut}`
     );
     const data = await res.json();
+    currentTaxRatePercent = data.tax_rate_percent || 12;
 
     if (!data.rooms || data.rooms.length === 0) {
       document.getElementById('roomSelectorSection').innerHTML = `
@@ -209,16 +223,16 @@ async function searchRooms() {
                         gap:8px;">
               ${grouped[type].map(r => `
                 <div id="room-${r.id}"
-                  onclick="selectRoom('${r.id}','${r.room_number}',
-                           '${r.room_type}',${r.base_price},
+                  onclick="selectRoom('${r.id}','${escapeAttr(r.room_number)}',
+                           '${escapeAttr(r.room_type)}',${r.base_price},
                            ${r.estimated_total},${r.nights},
-                           '${r.description}',${r.floor})"
+                           '${escapeAttr(r.description)}',${r.floor})"
                   style="border:2px solid ${c.border};border-radius:10px;
                          padding:12px 8px;cursor:pointer;background:white;
                          transition:all 0.2s;text-align:center;">
                   <div style="font-size:1.2rem;margin-bottom:4px;">🚪</div>
                   <div style="font-weight:800;color:#1a1a2e;font-size:0.9rem;">
-                    ${r.room_number}
+                    ${escapeHtml(r.room_number)}
                   </div>
                   <div style="font-size:0.65rem;color:#94a3b8;margin-top:2px;">
                     Floor ${r.floor}
@@ -237,24 +251,35 @@ function selectRoom(id, number, type, price, total, nights, desc, floor) {
   selectedRoomId = id;
   document.getElementById('roomSelect').value = id;
 
-  // Reset all
-  document.querySelectorAll('[id^="room-"]').forEach(c => {
-    c.style.background  = 'white';
-    c.style.borderColor = '#e2e8f0';
-    c.style.transform   = 'scale(1)';
+  // Reset ALL room cards back to original
+  document.querySelectorAll('[id^=\'room-\']').forEach(card => {
+    card.style.background  = 'white';
+    card.style.borderColor = '#e2e8f0';
+    card.style.transform   = 'scale(1)';
+    card.style.boxShadow   = 'none';
+    // Reset all text inside back to original colors
+    card.querySelectorAll('div').forEach(d => {
+      d.style.color = '';
+    });
   });
 
-  // Highlight selected
+  // Highlight selected card
   const selected = document.getElementById(`room-${id}`);
   if (selected) {
     selected.style.background  = '#1a1a2e';
     selected.style.borderColor = '#1a1a2e';
     selected.style.transform   = 'scale(1.05)';
-    selected.querySelectorAll('div').forEach(d => d.style.color = 'white');
+    selected.style.boxShadow   = '0 4px 14px rgba(26,26,46,0.3)';
+    // Set all text inside to white
+    selected.querySelectorAll('div').forEach(d => {
+      d.style.color = 'white';
+    });
   }
 
-  const subtotal = (total / 1.12).toFixed(2);
-  const tax      = (total - subtotal).toFixed(2);
+  // total passed from backend is actually the estimated_total (subtotal)
+  const subtotal = parseFloat(total);
+  const tax      = subtotal * (currentTaxRatePercent / 100);
+  const grandTotal = subtotal + tax;
 
   document.getElementById('selectedRoomInfo').innerHTML = `
     <div style="background:#f0fdf4;border:1.5px solid #bbf7d0;
@@ -267,36 +292,49 @@ function selectRoom(id, number, type, price, total, nights, desc, floor) {
             ${type} · Floor ${floor}
           </span>
         </div>
-        <span style="background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;
-                     padding:3px 10px;border-radius:20px;font-size:0.72rem;
-                     font-weight:700;">Selected ✓</span>
+        <span style="background:#f0fdf4;color:#16a34a;
+                     border:1px solid #bbf7d0;padding:3px 10px;
+                     border-radius:20px;font-size:0.72rem;font-weight:700;">
+          Selected ✓
+        </span>
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:16px;font-size:0.82rem;">
         <div>
           <div style="color:#64748b;">Nights</div>
-          <div style="font-weight:700;">${nights}</div>
+          <div style="font-weight:700;color:#1a1a2e;">${nights}</div>
         </div>
         <div>
           <div style="color:#64748b;">Rate/Night</div>
-          <div style="font-weight:700;">₱${parseFloat(price).toLocaleString()}</div>
+          <div style="font-weight:700;color:#1a1a2e;">
+            ₱${parseFloat(price).toLocaleString()}
+          </div>
         </div>
         <div>
           <div style="color:#64748b;">Subtotal</div>
-          <div style="font-weight:700;">₱${parseFloat(subtotal).toLocaleString()}</div>
+          <div style="font-weight:700;color:#1a1a2e;">
+            ₱${subtotal.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}
+          </div>
         </div>
         <div>
-          <div style="color:#64748b;">VAT 12%</div>
-          <div style="font-weight:700;">₱${parseFloat(tax).toLocaleString()}</div>
+          <div style="color:#64748b;">VAT ${currentTaxRatePercent}%</div>
+          <div style="font-weight:700;color:#1a1a2e;">
+            ₱${tax.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}
+          </div>
         </div>
         <div>
           <div style="color:#64748b;">Total</div>
-          <div style="font-weight:800;color:#16a34a;font-size:1rem;">
-            ₱${parseFloat(total).toLocaleString()}
+          <div style="font-weight:800;color:#16a34a;font-size:1.05rem;">
+            ₱${grandTotal.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}
           </div>
         </div>
       </div>
     </div>`;
   document.getElementById('selectedRoomInfo').classList.remove('d-none');
+
+  const payInput = document.getElementById('initialPaymentAmount');
+  if (payInput && !payInput.value) {
+    payInput.value = grandTotal.toFixed(2);
+  }
 }
 
 async function createBooking() {
@@ -308,14 +346,28 @@ async function createBooking() {
   const phone          = document.getElementById('phone').value.trim();
   const email          = document.getElementById('guestEmail').value.trim();
   const address        = document.getElementById('address').value.trim();
+  const paymentAmount  = parseFloat(document.getElementById('initialPaymentAmount').value) || 0;
+  const paymentMethod  = document.getElementById('initialPaymentMethod').value;
   const msgDiv         = document.getElementById('createMsg');
 
-  if (!room_id || !first_name || !last_name) {
+  if (!room_id || !first_name || !last_name || !check_in_date || !check_out_date) {
     msgDiv.innerHTML = `
       <div class="alert alert-warning" style="border-radius:10px;">
         Please fill in all required fields and select a room.
       </div>`;
     return;
+  }
+
+  const payload = {
+    first_name, last_name, phone, email,
+    address, room_id, check_in_date, check_out_date
+  };
+
+  if (paymentAmount > 0) {
+    payload.initial_payment = {
+      amount: paymentAmount,
+      payment_method: paymentMethod
+    };
   }
 
   try {
@@ -325,10 +377,7 @@ async function createBooking() {
         'Content-Type':  'application/json',
         'Authorization': `Bearer ${getToken()}`
       },
-      body: JSON.stringify({
-        first_name, last_name, phone, email,
-        address, room_id, check_in_date, check_out_date
-      })
+      body: JSON.stringify(payload)
     });
     const data = await res.json();
 
@@ -358,6 +407,8 @@ function resetBookingForm() {
   document.getElementById('guestEmail').value = '';
   document.getElementById('address').value    = '';
   document.getElementById('roomSelect').value = '';
+  document.getElementById('initialPaymentAmount').value = '';
+  document.getElementById('initialPaymentMethod').value = 'Cash';
   document.getElementById('roomSelectorSection').innerHTML = `
     <div style="text-align:center;padding:20px;color:#94a3b8;font-size:0.85rem;">
       Search rooms first to see availability.
@@ -372,6 +423,17 @@ async function loadBookings() {
     const res   = await fetch(`${API}/api/reservations`, {
       headers: { 'Authorization': `Bearer ${getToken()}` }
     });
+
+    if (!res.ok) {
+      document.getElementById('bookingsTable').innerHTML = `
+        <tr>
+          <td colspan="8" class="text-center py-4 text-danger">
+            Error loading bookings.
+          </td>
+        </tr>`;
+      return;
+    }
+
     const list  = await res.json();
     const tbody = document.getElementById('bookingsTable');
 
@@ -389,26 +451,28 @@ async function loadBookings() {
       <tr>
         <td style="color:#94a3b8;font-weight:600;">#${r.id}</td>
         <td>
-          <div style="font-weight:600;">${r.guest_name}</div>
-          <div style="font-size:0.75rem;color:#94a3b8;">${r.email || ''}</div>
+          <div style="font-weight:600;">${escapeHtml(r.guest_name)}</div>
+          <div style="font-size:0.75rem;color:#94a3b8;">${escapeHtml(r.email) || ''}</div>
         </td>
         <td>
-          <strong>${r.room_number}</strong>
-          <div style="font-size:0.75rem;color:#94a3b8;">${r.room_type}</div>
+          <strong>${escapeHtml(r.room_number)}</strong>
+          <div style="font-size:0.75rem;color:#94a3b8;">${escapeHtml(r.room_type)}</div>
         </td>
-        <td>${new Date(r.check_in_date).toLocaleDateString()}</td>
-        <td>${new Date(r.check_out_date).toLocaleDateString()}</td>
+        <td>${fmtShort(r.check_in_date)}</td>
+        <td>${fmtShort(r.check_out_date)}</td>
         <td><strong>₱${parseFloat(r.total_amount).toLocaleString()}</strong></td>
         <td>
           <span class="badge-status" style="${getBadgeStyle(r.status)}">
-            ${r.status}
+            ${escapeHtml(r.status)}
           </span>
         </td>
         <td>
           ${r.status === 'Booked' ? `
-            <button class="action-btn"
-              style="background:#f0fdf4;color:#16a34a;"
-              onclick="checkIn(${r.id})">Check In</button>
+          <button class="action-btn"
+            style="background:#f0fdf4;color:#16a34a;"
+            onclick="checkIn(${r.id},'${escapeAttr(r.guest_name)}','${escapeAttr(r.room_number)}',${r.total_amount})">
+            Check In
+          </button>
             <button class="action-btn"
               style="background:#fef2f2;color:#dc2626;"
               onclick="cancelBooking(${r.id})">Cancel</button>` : ''}
@@ -424,18 +488,18 @@ async function loadBookings() {
   } catch (err) { console.error(err); }
 }
 
-async function checkIn(id) {
-  showModal('checkin', 'Check In Guest',
-    'Are you sure you want to check in this guest?',
+async function checkIn(id, guestName, roomNumber, total) {
+  showModal(
+    'checkin',
+    'Proceed to Payment',
+    'Payment must be recorded before check-in. Proceed to the payments page?',
     async () => {
-      try {
-        const res  = await fetch(`${API}/api/reservations/${id}/checkin`, {
-          method: 'PATCH', headers: { 'Authorization': `Bearer ${getToken()}` }
-        });
-        const data = await res.json();
-        showToast(data.message, 'success');
-        loadBookings();
-      } catch { showToast('Server error.', 'error'); }
+      // Save reservation info for payments page
+      localStorage.setItem('pendingPayment', JSON.stringify({
+        id, guestName, roomNumber, total
+      }));
+      // Redirect to payments
+      window.location.href = 'payments.html';
     }
   );
 }
@@ -449,8 +513,12 @@ async function checkOut(id) {
           method: 'PATCH', headers: { 'Authorization': `Bearer ${getToken()}` }
         });
         const data = await res.json();
-        showToast(data.message, 'success');
-        loadBookings();
+        if (res.ok) {
+          showToast(data.message, 'success');
+          loadBookings();
+        } else {
+          showToast(data.message, 'error');
+        }
       } catch { showToast('Server error.', 'error'); }
     }
   );

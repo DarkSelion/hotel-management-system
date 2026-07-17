@@ -1,4 +1,5 @@
 let selectedRoomId = null;
+let currentTaxRatePercent = 12; // Dynamic default
 let selectedRoom   = null;
 
 async function searchRooms() {
@@ -13,6 +14,7 @@ async function searchRooms() {
       `${API}/api/rooms/availability?check_in_date=${checkIn}&check_out_date=${checkOut}`
     );
     const data = await res.json();
+    currentTaxRatePercent = data.tax_rate_percent || 12;
     document.getElementById('step2').style.display = 'block';
     const roomList = document.getElementById('roomList');
 
@@ -63,9 +65,9 @@ roomList.innerHTML = Object.keys(grouped).map(type => {
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;">
         ${grouped[type].map(r => `
           <div id="room-${r.id}"
-            onclick="selectRoom(${r.id},'${r.room_number}','${r.room_type}',
+            onclick="selectRoom(${r.id},'${escapeAttr(r.room_number)}','${escapeAttr(r.room_type)}',
                      ${r.base_price},${r.estimated_total},${r.nights},
-                     '${r.description}',${r.floor})"
+                     '${escapeAttr(r.description)}',${r.floor})"
             style="border:2px solid ${c.border};border-radius:12px;
                    padding:14px;cursor:pointer;background:white;
                    transition:all 0.2s;text-align:center;"
@@ -76,7 +78,7 @@ roomList.innerHTML = Object.keys(grouped).map(type => {
                           this.style.borderColor='${c.border}';}">
             <div style="font-size:1.5rem;margin-bottom:6px;">🚪</div>
             <div style="font-weight:800;color:#1a1a2e;font-size:1rem;">
-              ${r.room_number}
+              ${escapeHtml(r.room_number)}
             </div>
             <div style="font-size:0.72rem;color:#64748b;margin-top:2px;">
               Floor ${r.floor}
@@ -118,8 +120,10 @@ if (selected) {
   selected.querySelector('div:nth-child(2)').style.color = 'white';
 }
 
-  const subtotal = (total / 1.12).toFixed(2);
-  const tax      = (total - subtotal).toFixed(2);
+  // total passed from backend is actually the estimated_total (subtotal)
+  const subtotalObj = parseFloat(total);
+  const taxObj      = subtotalObj * (currentTaxRatePercent / 100);
+  const grandTotalObj = subtotalObj + taxObj;
 
   document.getElementById('costSummary').innerHTML = `
     <div class="cost-preview" style="margin-top:16px;">
@@ -141,16 +145,16 @@ if (selected) {
         </div>
         <div>
           <div style="color:#64748b;">Subtotal</div>
-          <div style="font-weight:600;">₱${parseFloat(subtotal).toLocaleString()}</div>
+          <div style="font-weight:600;">₱${subtotalObj.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</div>
         </div>
         <div>
-          <div style="color:#64748b;">VAT 12%</div>
-          <div style="font-weight:600;">₱${parseFloat(tax).toLocaleString()}</div>
+          <div style="color:#64748b;">VAT ${currentTaxRatePercent}%</div>
+          <div style="font-weight:600;">₱${taxObj.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</div>
         </div>
         <div>
           <div style="color:#64748b;">Total</div>
           <div style="font-weight:800;color:#16a34a;font-size:1.05rem;">
-            ₱${parseFloat(total).toLocaleString()}
+            ₱${grandTotalObj.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}
           </div>
         </div>
       </div>
@@ -179,6 +183,13 @@ async function submitReservation() {
     msgDiv.innerHTML = `
       <div class="alert alert-warning" style="border-radius:10px;">
         Please select a room.
+      </div>`;
+    return;
+  }
+  if (!calState.checkinDate || !calState.checkoutDate) {
+    msgDiv.innerHTML = `
+      <div class="alert alert-warning" style="border-radius:10px;">
+        Please select both check-in and check-out dates.
       </div>`;
     return;
   }

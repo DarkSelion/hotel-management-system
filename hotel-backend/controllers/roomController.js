@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const { getConfig } = require('../utils/cache');
 
 // Get all rooms with their types
 const getAllRooms = async (req, res) => {
@@ -48,16 +49,14 @@ const checkAvailability = async (req, res) => {
   }
 
   try {
-    // Get max stay from system config
-    const [config] = await db.query(
-      'SELECT config_value FROM system_configurations WHERE config_key = ?',
-      ['max_stay_nights']
-    );
-
-    if (config.length > 0) {
-      const maxNights = parseInt(config[0].config_value);
-      const nights = (new Date(check_out_date) - new Date(check_in_date)) 
-                     / (1000 * 60 * 60 * 24);
+    // Get max stay from system config via cache
+    const maxStayVal = await getConfig('max_stay_nights');
+    if (maxStayVal) {
+      const maxNights = parseInt(maxStayVal);
+      const nights = Math.round(
+        (new Date(check_out_date) - new Date(check_in_date))
+        / (1000 * 60 * 60 * 24)
+      );
       if (nights > maxNights) {
         return res.status(400).json({ 
           message: `Maximum stay is ${maxNights} nights.` 
@@ -78,7 +77,7 @@ const checkAvailability = async (req, res) => {
         DATEDIFF(?, ?)                                       AS nights
       FROM rooms r
       JOIN room_types rt ON r.room_type_id = rt.id
-      WHERE r.status = 'Available'
+      WHERE r.status != 'Under Maintenance'
         AND r.id NOT IN (
           SELECT room_id FROM reservations
           WHERE status NOT IN ('Cancelled', 'Checked Out')
@@ -110,11 +109,16 @@ const checkAvailability = async (req, res) => {
       });
     }
 
+    // Get tax rate from system config via cache
+    const taxRateVal = await getConfig('tax_rate_percent');
+    const taxRatePercent = taxRateVal ? parseFloat(taxRateVal) : 12;
+
     res.json({
       message: `${rooms.length} room(s) available.`,
       check_in_date,
       check_out_date,
       nights: rooms[0].nights,
+      tax_rate_percent: taxRatePercent,
       rooms
     });
 

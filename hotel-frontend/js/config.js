@@ -1,4 +1,4 @@
-const API = 'http://localhost:3000';
+const API = 'http://localhost:3000' /*'http://3.106.251.7:3000';*/
 
 const ROLE_COLORS = {
   'Admin':        'background:#fef2f2;color:#dc2626;',
@@ -63,8 +63,8 @@ function setupSidebar(activePage) {
 function setupWelcome() {
   const user = getUser();
   document.getElementById('welcomeMsg').innerHTML = `
-    <span class="user-name">${user.name}</span>
-    <span class="role-tag" style="${ROLE_COLORS[user.role] || ''}">${user.role}</span>`;
+    <span class="user-name">${escapeHtml(user.name)}</span>
+    <span class="role-tag" style="${ROLE_COLORS[user.role] || ''}">${escapeHtml(user.role)}</span>`;
 }
 
 function getBadgeStyle(status) {
@@ -90,9 +90,83 @@ function fmtDate(date) {
   return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
 }
 
-function fmtDisplay(dateStr) {
-  const d = new Date(dateStr + 'T00:00:00');
+function parseDate(value) {
+  if (!value) return null;
+  if (value instanceof Date) return isNaN(value.getTime()) ? null : value;
+
+  const str = String(value).trim();
+  const match = str.match(/^(\d{4}-\d{2}-\d{2})/);
+  if (match) return new Date(`${match[1]}T00:00:00`);
+
+  const d = new Date(str);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+function fmtDisplay(value) {
+  const d = parseDate(value);
+  if (!d) return 'Invalid date';
   return d.toLocaleDateString('en-US', {
     weekday: 'short', month: 'long', day: 'numeric', year: 'numeric'
   });
+}
+
+function fmtShort(value) {
+  const d = parseDate(value);
+  if (!d) return 'Invalid date';
+  return d.toLocaleDateString();
+}
+
+function isCheckInDue(dateStr) {
+  const d = parseDate(dateStr);
+  if (!d) return false;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return d <= today;
+}
+
+function getPaymentStatus(totalAmount, totalPaid) {
+  const total = parseFloat(totalAmount) || 0;
+  const paid  = parseFloat(totalPaid) || 0;
+  if (paid <= 0) return 'Unpaid';
+  if (paid >= total) return 'Fully Paid';
+  return 'Partially Paid';
+}
+
+function getPaymentBadgeStyle(status) {
+  const styles = {
+    'Unpaid':        'background:#fef2f2;color:#dc2626;',
+    'Partially Paid':'background:#fff7ed;color:#ea580c;',
+    'Fully Paid':    'background:#f0fdf4;color:#16a34a;'
+  };
+  return styles[status] || 'background:#f8fafc;color:#64748b;';
+}
+function toggleSidebar() {
+  const sidebar  = document.querySelector('.sidebar');
+  const overlay  = document.getElementById('sidebarOverlay');
+  sidebar.classList.toggle('open');
+  overlay.classList.toggle('show');
+}
+
+function closeSidebar() {
+  const sidebar  = document.querySelector('.sidebar');
+  const overlay  = document.getElementById('sidebarOverlay');
+  sidebar.classList.remove('open');
+  overlay.classList.remove('show');
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  const div = document.createElement('div');
+  div.textContent = String(str);
+  return div.innerHTML;
+}
+
+function escapeAttr(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/\\/g, '\\\\')
+    .replace(/'/g, "\\'")
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
 }

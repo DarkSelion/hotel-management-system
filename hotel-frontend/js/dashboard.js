@@ -4,7 +4,10 @@ async function loadDashboard() {
     const user    = getUser();
 
     const roomsRes = await fetch(`${API}/api/rooms`, { headers });
+    if (!roomsRes.ok) throw new Error('Failed to load rooms');
     const rooms    = await roomsRes.json();
+
+    if (!Array.isArray(rooms)) throw new Error('Invalid rooms data');
 
     document.getElementById('totalRooms').textContent     = rooms.length;
     document.getElementById('availableRooms').textContent = rooms.filter(r => r.status === 'Available').length;
@@ -24,7 +27,10 @@ async function loadDashboard() {
     setType('suite',    rooms.filter(r => r.room_type === 'Suite'));
 
     const resRes  = await fetch(`${API}/api/reservations`, { headers });
+    if (!resRes.ok) throw new Error('Failed to load reservations');
     const resList = await resRes.json();
+
+    if (!Array.isArray(resList)) throw new Error('Invalid reservations data');
 
     document.getElementById('totalReservations').textContent = resList.length;
     document.getElementById('activeBookings').textContent =
@@ -36,9 +42,11 @@ async function loadDashboard() {
 
     if (user.role !== 'Receptionist') {
       const payRes  = await fetch(`${API}/api/payments`, { headers });
-      const payData = await payRes.json();
-      document.getElementById('totalRevenue').textContent =
-        `₱${parseFloat(payData.total_revenue || 0).toLocaleString()}`;
+      if (payRes.ok) {
+        const payData = await payRes.json();
+        document.getElementById('totalRevenue').textContent =
+          `₱${parseFloat(payData.total_revenue || 0).toLocaleString()}`;
+      }
     }
 
     const tbody  = document.getElementById('recentReservations');
@@ -51,17 +59,17 @@ async function loadDashboard() {
       <tr>
         <td style="color:#94a3b8;font-weight:600;">#${r.id}</td>
         <td>
-          <div style="font-weight:600;">${r.guest_name}</div>
-          <div style="font-size:0.75rem;color:#94a3b8;">${r.email || ''}</div>
+          <div style="font-weight:600;">${escapeHtml(r.guest_name)}</div>
+          <div style="font-size:0.75rem;color:#94a3b8;">${escapeHtml(r.email) || ''}</div>
         </td>
-        <td><strong>${r.room_number}</strong></td>
-        <td style="color:#64748b;">${r.room_type}</td>
-        <td>${new Date(r.check_in_date).toLocaleDateString()}</td>
-        <td>${new Date(r.check_out_date).toLocaleDateString()}</td>
+        <td><strong>${escapeHtml(r.room_number)}</strong></td>
+        <td style="color:#64748b;">${escapeHtml(r.room_type)}</td>
+        <td>${fmtShort(r.check_in_date)}</td>
+        <td>${fmtShort(r.check_out_date)}</td>
         <td><strong>₱${parseFloat(r.total_amount).toLocaleString()}</strong></td>
         <td>
           <span class="badge-status" style="${getBadgeStyle(r.status)}">
-            ${r.status}
+            ${escapeHtml(r.status)}
           </span>
         </td>
       </tr>`).join('');

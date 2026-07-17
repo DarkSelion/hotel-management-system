@@ -1,8 +1,13 @@
 const db = require('../config/db');
+const {
+  getTotalPaid,
+  recordPayment,
+  tryAutoCheckIn
+} = require('../utils/reservationHelpers');
 
 // Record a payment for a reservation
 const createPayment = async (req, res) => {
-  const { reservation_id, amount, payment_method } = req.body;
+  const { reservation_id, amount, payment_method, auto_checkin } = req.body;
 
   if (!reservation_id || !amount || !payment_method) {
     return res.status(400).json({
@@ -10,83 +15,64 @@ const createPayment = async (req, res) => {
     });
   }
 
-  const validMethods = ['Cash', 'GCash'];
-  if (!validMethods.includes(payment_method)) {
-    return res.status(400).json({
-      message: `Invalid payment method. Use: ${validMethods.join(', ')}`
-    });
-  }
+  const connection = await db.getConnection();
 
   try {
-    // Check reservation exists
-    const [reservation] = await db.query(
+    await connection.beginTransaction();
+
+    const [reservation] = await connection.query(
       'SELECT * FROM reservations WHERE id = ?',
       [reservation_id]
     );
 
     if (reservation.length === 0) {
+      await connection.rollback();
       return res.status(404).json({ message: 'Reservation not found.' });
     }
 
-    if (reservation[0].status === 'Cancelled') {
-      return res.status(400).json({
-        message: 'Cannot record payment for a cancelled reservation.'
-      });
+    const paymentInfo = await recordPayment(connection, {
+      reservationId: reservation_id,
+      amount,
+      paymentMethod: payment_method
+    });
+
+    let checkedIn = false;
+    if (auto_checkin) {
+      checkedIn = await tryAutoCheckIn(connection, reservation[0]);
     }
 
-    // Check if already fully paid
-    const [existingPayments] = await db.query(
-      `SELECT COALESCE(SUM(amount), 0) AS total_paid
-       FROM payments
-       WHERE reservation_id = ? AND status = 'Completed'`,
-      [reservation_id]
-    );
-
-    const totalPaid     = parseFloat(existingPayments[0].total_paid);
-    const totalAmount   = parseFloat(reservation[0].total_amount);
-    const remainingBalance = totalAmount - totalPaid;
-
-    if (remainingBalance <= 0) {
-      return res.status(400).json({
-        message: 'This reservation is already fully paid.',
-        total_amount:  totalAmount.toFixed(2),
-        total_paid:    totalPaid.toFixed(2),
-        balance:       '0.00'
-      });
-    }
-
-    if (parseFloat(amount) > remainingBalance) {
-      return res.status(400).json({
-        message: `Payment exceeds remaining balance.`,
-        remaining_balance: remainingBalance.toFixed(2)
-      });
-    }
-
-    // Record payment
-    const [payment] = await db.query(
-      `INSERT INTO payments (reservation_id, amount, payment_method, status)
-       VALUES (?, ?, ?, 'Completed')`,
-      [reservation_id, amount, payment_method]
-    );
-
-    // Calculate new balance
-    const newTotalPaid = totalPaid + parseFloat(amount);
-    const newBalance   = totalAmount - newTotalPaid;
+    await connection.commit();
 
     res.status(201).json({
-      message:        'Payment recorded successfully.',
-      payment_id:     payment.insertId,
+      message: checkedIn
+        ? 'Payment recorded and guest checked in successfully.'
+        : 'Payment recorded successfully.',
+      ...paymentInfo,
       reservation_id,
-      amount_paid:    parseFloat(amount).toFixed(2),
-      total_amount:   totalAmount.toFixed(2),
-      total_paid:     newTotalPaid.toFixed(2),
-      balance:        newBalance.toFixed(2),
       payment_method,
-      status:         newBalance <= 0 ? 'Fully Paid' : 'Partially Paid'
+      checked_in: checkedIn,
+      reservation_status: checkedIn ? 'Checked In' : reservation[0].status
     });
 
   } catch (err) {
+    await connection.rollback();
+
+    if (err.code === 'NOT_FOUND') {
+      return res.status(404).json({ message: err.message });
+    }
+    if (err.code === 'EXCEEDS_BALANCE') {
+      return res.status(400).json({
+        message: err.message,
+        remaining_balance: err.remaining_balance
+      });
+    }
+    if (['INVALID_METHOD', 'INVALID_AMOUNT', 'ALREADY_PAID', 'CANCELLED'].includes(err.code)) {
+      return res.status(400).json({ message: err.message });
+    }
+
     res.status(500).json({ message: 'Server error.', error: err.message });
+  } finally {
+    connection.release();
   }
 };
 
@@ -117,13 +103,36 @@ const getPaymentsByReservation = async (req, res) => {
     );
 
     if (payments.length === 0) {
+      const [resRows] = await db.query(
+        `SELECT res.total_amount, res.check_in_date, res.check_out_date,
+                CONCAT(g.first_name, ' ', g.last_name) AS guest_name,
+                r.room_number
+         FROM reservations res
+         JOIN guests g ON res.guest_id = g.id
+         JOIN rooms r  ON res.room_id  = r.id
+         WHERE res.id = ?`,
+        [reservation_id]
+      );
+
+      if (resRows.length === 0) {
+        return res.status(404).json({ message: 'Reservation not found.' });
+      }
+
+      const totalAmount = parseFloat(resRows[0].total_amount);
       return res.json({
-        message: 'No payments found for this reservation.',
+        reservation_id,
+        guest_name: resRows[0].guest_name,
+        room_number: resRows[0].room_number,
+        check_in_date: resRows[0].check_in_date,
+        check_out_date: resRows[0].check_out_date,
+        total_amount: totalAmount.toFixed(2),
+        total_paid: '0.00',
+        balance: totalAmount.toFixed(2),
+        status: 'Unpaid',
         payments: []
       });
     }
 
-    // Calculate totals
     const totalPaid = payments.reduce((sum, p) => sum + parseFloat(p.amount), 0);
     const totalAmount = parseFloat(payments[0].total_amount);
     const balance = totalAmount - totalPaid;

@@ -4,6 +4,14 @@ const jwt    = require('jsonwebtoken');
 
 const register = async (req, res) => {
   const { name, email, password, role_id } = req.body;
+
+  // Validate required fields
+  if (!name || !email || !password || !role_id) {
+    return res.status(400).json({
+      message: 'name, email, password, and role_id are required.'
+    });
+  }
+
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
     await db.query(
@@ -21,6 +29,11 @@ const register = async (req, res) => {
 
 const login = async (req, res) => {
   const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ message: 'Email and password are required.' });
+  }
+
   try {
     const [rows] = await db.query(
       `SELECT u.*, r.name AS role 

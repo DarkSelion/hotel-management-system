@@ -1,3 +1,61 @@
+async function autoSelectPendingPayment() {
+  const pending = localStorage.getItem('pendingPayment');
+  if (!pending) return;
+
+  const data = JSON.parse(pending);
+  localStorage.removeItem('pendingPayment');
+
+  // Wait for dropdown to load first
+  await loadReservationDropdown();
+
+  // Small delay to make sure dropdown is ready
+  setTimeout(async () => {
+    // Set dropdown label
+    document.getElementById('dropdownLabel').textContent =
+      `#${data.id} — ${data.guestName} — Room ${data.roomNumber} — ₱${parseFloat(data.total).toLocaleString()}`;
+    document.getElementById('dropdownLabel').style.color = '#1a1a2e';
+    document.getElementById('reservationDropdown').value = data.id;
+
+    // Load reservation details
+    await loadReservationDetails(data.id);
+
+    // Scroll to payment form
+    const section = document.getElementById('recordPaymentSection');
+    if (section) {
+      section.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Show a toast notification
+    showPaymentToast(`Guest checked in — Record payment for ${data.guestName}`);
+  }, 500);
+}
+
+function showPaymentToast(message) {
+  const existing = document.getElementById('payToast');
+  if (existing) existing.remove();
+
+  const toast = document.createElement('div');
+  toast.id = 'payToast';
+  toast.style.cssText = `
+    position:fixed;top:24px;right:24px;
+    background:linear-gradient(135deg,#1a1a2e,#0f3460);
+    color:white;padding:16px 20px;border-radius:14px;
+    font-size:0.875rem;font-weight:600;
+    box-shadow:0 8px 24px rgba(0,0,0,0.2);
+    z-index:9999;display:flex;align-items:center;gap:10px;
+    max-width:320px;`;
+  toast.innerHTML = `
+    <span style="font-size:1.2rem;">💳</span>
+    <span>${message}</span>`;
+  document.body.appendChild(toast);
+
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transition = 'opacity 0.3s';
+    setTimeout(() => toast.remove(), 300);
+  }, 4000);
+}
+
 function selectMethod(method) {
   document.getElementById('paymentMethod').value = method;
 
@@ -42,18 +100,10 @@ async function loadReservationDropdown() {
       return;
     }
 
-    const withBalance = await Promise.all(active.map(async r => {
-      try {
-        const payRes  = await fetch(`${API}/api/payments/reservation/${r.id}`, {
-          headers: { 'Authorization': `Bearer ${getToken()}` }
-        });
-        const payData = await payRes.json();
-        const paid    = payData.total_paid ? parseFloat(payData.total_paid) : 0;
-        return { ...r, balance: parseFloat(r.total_amount) - paid };
-      } catch {
-        return { ...r, balance: parseFloat(r.total_amount) };
-      }
-    }));
+    const withBalance = active.map(r => {
+      const paid = parseFloat(r.total_paid) || 0;
+      return { ...r, balance: parseFloat(r.total_amount) - paid };
+    });
 
     const unpaid = withBalance.filter(r => r.balance > 0);
 
@@ -68,16 +118,16 @@ async function loadReservationDropdown() {
 
     list.innerHTML = unpaid.map(r => `
       <div onclick="selectReservation(
-                    '${r.id}','${r.guest_name}',
-                    '${r.room_number}','${r.total_amount}',
-                    '${r.status}',${r.balance})"
+                    '${r.id}','${escapeAttr(r.guest_name)}',
+                    '${escapeAttr(r.room_number)}','${r.total_amount}',
+                    '${escapeAttr(r.status)}',${r.balance})"
         style="padding:14px 16px;cursor:pointer;
                border-bottom:1px solid #f1f5f9;transition:background 0.15s;"
         onmouseover="this.style.background='#f8fafc'"
         onmouseout="this.style.background='white'">
         <div style="display:flex;justify-content:space-between;align-items:center;">
           <div>
-            <span style="font-weight:700;color:#1a1a2e;">${r.guest_name}</span>
+            <span style="font-weight:700;color:#1a1a2e;">${escapeHtml(r.guest_name)}</span>
             <span style="color:#94a3b8;font-size:0.78rem;margin-left:8px;">
               #${r.id}
             </span>
@@ -92,7 +142,7 @@ async function loadReservationDropdown() {
         </div>
         <div style="margin-top:4px;display:flex;gap:16px;font-size:0.78rem;">
           <span style="color:#64748b;">
-            Room <strong>${r.room_number}</strong>
+            Room <strong>${escapeHtml(r.room_number)}</strong>
           </span>
           <span style="color:#64748b;">
             Total: <strong>₱${parseFloat(r.total_amount).toLocaleString()}</strong>
@@ -144,7 +194,7 @@ async function loadReservationDetails(id) {
     document.getElementById('detailRoom').textContent =
       `${data.room_number} (${data.room_type})`;
     document.getElementById('detailCheckIn').textContent =
-      new Date(data.check_in_date).toLocaleDateString();
+      fmtDisplay(data.check_in_date);
     document.getElementById('detailTotal').textContent =
       `₱${parseFloat(data.total_amount).toLocaleString()}`;
     document.getElementById('detailBalance').textContent =
@@ -389,14 +439,14 @@ async function loadPayments() {
     tbody.innerHTML = data.payments.map(p => `
       <tr>
         <td style="color:#94a3b8;font-weight:600;">${p.id}</td>
-        <td><strong>${p.guest_name}</strong></td>
-        <td>${p.room_number}</td>
-        <td>${new Date(p.check_in_date).toLocaleDateString()}</td>
-        <td>${new Date(p.check_out_date).toLocaleDateString()}</td>
+        <td><strong>${escapeHtml(p.guest_name)}</strong></td>
+        <td>${escapeHtml(p.room_number)}</td>
+        <td>${fmtShort(p.check_in_date)}</td>
+        <td>${fmtShort(p.check_out_date)}</td>
         <td>₱${parseFloat(p.total_amount).toLocaleString()}</td>
         <td><strong>₱${parseFloat(p.amount).toLocaleString()}</strong></td>
         <td>${p.payment_method}</td>
-        <td>${new Date(p.payment_date).toLocaleDateString()}</td>
+        <td>${fmtShort(p.payment_date)}</td>
         <td>
           <span class="badge-status" style="background:#f0fdf4;color:#16a34a;">
             ${p.status}
@@ -409,14 +459,15 @@ async function loadPayments() {
 // Init based on role
 const currentUser = getUser();
 
-// Admin and Manager and Receptionist can all record payment
-if (currentUser.role === 'Admin' ||
-    currentUser.role === 'Manager' ||
-    currentUser.role === 'Receptionist') {
-  loadReservationDropdown();
-}
-
-// Admin and Manager see revenue and history
 if (currentUser.role === 'Admin' || currentUser.role === 'Manager') {
   loadPayments();
+}
+
+// Check if coming from booking page with pending payment
+const hasPending = localStorage.getItem('pendingPayment');
+
+if (hasPending) {
+  autoSelectPendingPayment();
+} else if (currentUser.role) {
+  loadReservationDropdown();
 }
