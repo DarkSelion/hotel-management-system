@@ -39,19 +39,14 @@ const typeColors = {
   'Suite':    { bg:'#fff7ed', color:'#ea580c', border:'#fed7aa' }
 };
 
-const typeIcons = {
-  'Standard': '🛏️',
-  'Deluxe':   '🌟',
-  'Suite':    '👑'
-};
+
 
 roomList.innerHTML = Object.keys(grouped).map(type => {
   const c = typeColors[type] || { bg:'#f8fafc', color:'#64748b', border:'#e2e8f0' };
-  const icon = typeIcons[type] || '🏨';
   return `
     <div style="margin-bottom:20px;">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
-        <span style="font-size:1.1rem;">${icon}</span>
+        <span style="width:8px;height:8px;border-radius:50%;background:${c.color};display:inline-block;"></span>
         <span style="font-weight:700;color:#1a1a2e;font-size:0.95rem;">
           ${type} Rooms
         </span>
@@ -76,7 +71,7 @@ roomList.innerHTML = Object.keys(grouped).map(type => {
             onmouseout="if(!this.classList.contains('selected')){
                           this.style.background='white';
                           this.style.borderColor='${c.border}';}">
-            <div style="font-size:1.5rem;margin-bottom:6px;">🚪</div>
+            <div style="width:28px;height:28px;margin:0 auto 6px;border:2px solid #cbd5e1;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:800;color:#64748b;">R</div>
             <div style="font-weight:800;color:#1a1a2e;font-size:1rem;">
               ${escapeHtml(r.room_number)}
             </div>

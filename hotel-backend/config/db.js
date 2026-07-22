@@ -1,3 +1,4 @@
+process.env.DOTENV_CONFIG_QUIET = 'true';
 const mysql = require('mysql2');
 require('dotenv').config();
 

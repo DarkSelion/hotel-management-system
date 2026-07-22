@@ -33,9 +33,9 @@ function showModal(type, title, message, callback) {
   const messageEl  = document.getElementById('modalMessage');
   const confirmBtn = document.getElementById('modalConfirmBtn');
   const types = {
-    checkin:  { icon:'✅', bg:'linear-gradient(135deg,#16a34a,#15803d)', label:'Check In' },
-    checkout: { icon:'🚪', bg:'linear-gradient(135deg,#475569,#334155)', label:'Check Out' },
-    cancel:   { icon:'❌', bg:'linear-gradient(135deg,#dc2626,#991b1b)', label:'Cancel' }
+    checkin:  { icon:'', bg:'linear-gradient(135deg,#16a34a,#15803d)', label:'Check In' },
+    checkout: { icon:'', bg:'linear-gradient(135deg,#475569,#334155)', label:'Check Out' },
+    cancel:   { icon:'', bg:'linear-gradient(135deg,#dc2626,#991b1b)', label:'Cancel' }
   };
   const t = types[type];
   icon.textContent            = t.icon;
@@ -74,7 +74,7 @@ function showBookingSuccess(data) {
     <div style="background:white;border-radius:20px;padding:36px;
                 max-width:460px;width:90%;text-align:center;
                 box-shadow:0 20px 60px rgba(0,0,0,0.3);">
-      <div style="font-size:3rem;margin-bottom:12px;">🎉</div>
+      <div style="width:56px;height:56px;margin:0 auto 12px;background:#059669;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:1.6rem;">&#10003;</div>
       <h5 style="font-weight:800;color:#1a1a2e;margin-bottom:4px;">
         ${data.checked_in ? 'Booking Confirmed & Checked In!' : 'Booking Confirmed!'}
       </h5>
@@ -195,16 +195,13 @@ async function searchRooms() {
       'Deluxe':   { bg:'#f0fdf4', color:'#16a34a', border:'#bbf7d0', selected:'#16a34a' },
       'Suite':    { bg:'#fff7ed', color:'#ea580c', border:'#fed7aa', selected:'#ea580c' }
     };
-    const typeIcons = { 'Standard':'🛏️', 'Deluxe':'🌟', 'Suite':'👑' };
-
     document.getElementById('roomSelectorSection').innerHTML =
       Object.keys(grouped).map(type => {
         const c    = typeColors[type] || { bg:'#f8fafc', color:'#64748b', border:'#e2e8f0' };
-        const icon = typeIcons[type] || '🏨';
         return `
           <div style="margin-bottom:20px;">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-              <span>${icon}</span>
+              <span style="width:8px;height:8px;border-radius:50%;background:${c.color};display:inline-block;"></span>
               <span style="font-weight:700;color:#1a1a2e;font-size:0.875rem;">
                 ${type} Rooms
               </span>
@@ -230,7 +227,7 @@ async function searchRooms() {
                   style="border:2px solid ${c.border};border-radius:10px;
                          padding:12px 8px;cursor:pointer;background:white;
                          transition:all 0.2s;text-align:center;">
-                  <div style="font-size:1.2rem;margin-bottom:4px;">🚪</div>
+                  <div style="width:24px;height:24px;margin:0 auto 4px;border:1.5px solid #cbd5e1;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:800;color:#64748b;">R</div>
                   <div style="font-weight:800;color:#1a1a2e;font-size:0.9rem;">
                     ${escapeHtml(r.room_number)}
                   </div>
@@ -427,7 +424,7 @@ async function loadBookings() {
     if (!res.ok) {
       document.getElementById('bookingsTable').innerHTML = `
         <tr>
-          <td colspan="8" class="text-center py-4 text-danger">
+          <td colspan="9" class="text-center py-4 text-danger">
             Error loading bookings.
           </td>
         </tr>`;
@@ -440,7 +437,7 @@ async function loadBookings() {
     if (list.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="8" class="text-center py-4 text-muted">
+          <td colspan="9" class="text-center py-4 text-muted">
             No bookings yet.
           </td>
         </tr>`;
@@ -462,6 +459,11 @@ async function loadBookings() {
         <td>${fmtShort(r.check_out_date)}</td>
         <td><strong>₱${parseFloat(r.total_amount).toLocaleString()}</strong></td>
         <td>
+          <span class="badge-status" style="${getPaymentBadgeStyle(getPaymentStatus(r.total_amount, r.total_paid))}">
+            ${getPaymentStatus(r.total_amount, r.total_paid)}
+          </span>
+        </td>
+        <td>
           <span class="badge-status" style="${getBadgeStyle(r.status)}">
             ${escapeHtml(r.status)}
           </span>
@@ -469,9 +471,9 @@ async function loadBookings() {
         <td>
           ${r.status === 'Booked' ? `
           <button class="action-btn"
-            style="background:#f0fdf4;color:#16a34a;"
+            style="background:#eff6ff;color:#2563eb;"
             onclick="checkIn(${r.id},'${escapeAttr(r.guest_name)}','${escapeAttr(r.room_number)}',${r.total_amount})">
-            Check In
+            Pay & Check In
           </button>
             <button class="action-btn"
               style="background:#fef2f2;color:#dc2626;"

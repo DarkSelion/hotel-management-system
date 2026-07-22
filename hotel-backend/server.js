@@ -1,3 +1,4 @@
+process.env.DOTENV_CONFIG_QUIET = 'true';
 const express = require('express');
 const cors    = require('cors');
 require('dotenv').config();

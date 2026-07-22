@@ -244,21 +244,6 @@ body {
   letter-spacing: -1px;
 }
 .stat-card .sublabel { font-size: 0.75rem; color: #94a3b8; }
-.stat-card .indicator {
-  width: 50px; height: 50px;
-  border-radius: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.4rem;
-  margin-bottom: 16px;
-  transition: transform 0.3s;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-}
-.stat-card:hover .indicator {
-  transform: scale(1.1) rotate(-3deg);
-}
-
 /* ===== CARDS ===== */
 .card-custom {
   background: white;
@@ -738,10 +723,6 @@ body {
 
   .stat-card { padding: 18px; }
   .stat-card .value { font-size: 1.7rem; }
-  .stat-card .indicator {
-    width: 40px; height: 40px; font-size: 1.1rem;
-  }
-
   .card-body-custom { padding: 16px; }
   .card-head { padding: 16px 18px; }
 

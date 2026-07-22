@@ -13,11 +13,11 @@ const { verifyToken, authorizeRoles } = require('../middleware/authMiddleware');
 // Public route — guests can reserve without login
 router.post('/guest', createReservation);
 
-// Protected routes — staff only
-router.post('/',              verifyToken, authorizeRoles('Admin', 'Receptionist', 'Manager'), createReservation);
+// Protected routes
+router.post('/',              verifyToken, authorizeRoles('Admin', 'Receptionist', 'Manager', 'Guest'), createReservation);
 router.get('/',               verifyToken, getAllReservations);
 router.get('/:id',            verifyToken, getReservationById);
-router.patch('/:id/cancel',   verifyToken, authorizeRoles('Admin', 'Receptionist', 'Manager'), cancelReservation);
+router.patch('/:id/cancel',   verifyToken, authorizeRoles('Admin', 'Receptionist', 'Manager', 'Guest'), cancelReservation);
 router.patch('/:id/checkin',  verifyToken, authorizeRoles('Admin', 'Receptionist', 'Manager'), checkIn);
 router.patch('/:id/checkout', verifyToken, authorizeRoles('Admin', 'Receptionist', 'Manager'), checkOut);
 

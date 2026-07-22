@@ -86,7 +86,8 @@ CREATE TABLE `roles` (
 INSERT INTO `roles` (`id`, `name`) VALUES
 (1, 'Admin'),
 (2, 'Receptionist'),
-(3, 'Manager');
+(3, 'Manager'),
+(4, 'Guest');
 
 -- --------------------------------------------------------
 

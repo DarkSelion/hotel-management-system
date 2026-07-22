@@ -65,4 +65,47 @@ const login = async (req, res) => {
   }
 };
 
-module.exports = { register, login };
+const guestRegister = async (req, res) => {
+  const { name, email, password, phone, address } = req.body;
+
+  if (!name || !email || !password) {
+    return res.status(400).json({
+      message: 'name, email, and password are required.'
+    });
+  }
+
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await db.query(
+      'INSERT INTO users (name, email, password, role_id) VALUES (?, ?, ?, ?)',
+      [name, email, hashedPassword, 4]
+    );
+
+    const [rows] = await db.query(
+      `SELECT u.id, r.name AS role 
+       FROM users u 
+       JOIN roles r ON u.role_id = r.id 
+       WHERE u.email = ?`,
+      [email]
+    );
+
+    const token = jwt.sign(
+      { id: rows[0].id, name, role: 'Guest' },
+      process.env.JWT_SECRET,
+      { expiresIn: '8h' }
+    );
+
+    res.status(201).json({
+      message: 'Guest registered successfully.',
+      token,
+      user: { id: rows[0].id, name, role: 'Guest' }
+    });
+  } catch (err) {
+    if (err.code === 'ER_DUP_ENTRY') {
+      return res.status(400).json({ message: 'Email already exists.' });
+    }
+    res.status(500).json({ message: 'Server error.', error: err.message });
+  }
+};
+
+module.exports = { register, login, guestRegister };

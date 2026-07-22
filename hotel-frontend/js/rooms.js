@@ -32,15 +32,12 @@ async function loadRooms() {
       'Deluxe':   { bg:'#f0fdf4', color:'#16a34a', border:'#bbf7d0' },
       'Suite':    { bg:'#fff7ed', color:'#ea580c', border:'#fed7aa' }
     };
-    const typeIcons = { 'Standard':'🛏️', 'Deluxe':'🌟', 'Suite':'👑' };
-
     container.innerHTML = Object.keys(grouped).map(type => {
       const c    = typeColors[type] || { bg:'#f8fafc', color:'#64748b', border:'#e2e8f0' };
-      const icon = typeIcons[type] || '🏨';
       return `
         <div style="margin-bottom:28px;">
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
-            <span style="font-size:1.2rem;">${icon}</span>
+            <span style="width:10px;height:10px;border-radius:50%;background:${c.color};display:inline-block;"></span>
             <span style="font-weight:700;color:#1a1a2e;font-size:1rem;">
               ${type} Rooms
             </span>
@@ -71,9 +68,9 @@ async function loadRooms() {
                 : '#ea580c';
 
               const statusIcon =
-                r.status === 'Available' ? '✅'
-                : r.status === 'Occupied' ? '🔴'
-                : '🔧';
+                r.status === 'Available' ? ''
+                : r.status === 'Occupied' ? ''
+                : '';
 
               return `
                 <div style="border:2px solid #e2e8f0;border-radius:12px;
@@ -84,7 +81,7 @@ async function loadRooms() {
                                this.style.boxShadow='0 4px 14px rgba(0,0,0,0.08)'"
                   onmouseout="this.style.transform='translateY(0)';
                               this.style.boxShadow='none'">
-                  <div style="font-size:1.4rem;margin-bottom:6px;">🚪</div>
+                  <div style="width:28px;height:28px;margin:0 auto 6px;border:2px solid #cbd5e1;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:800;color:#64748b;">R</div>
                   <div style="font-weight:800;color:#1a1a2e;font-size:1rem;">
                     ${escapeHtml(r.room_number)}
                   </div>
@@ -148,19 +145,16 @@ async function checkAvailability() {
       'Deluxe':   { bg:'#f0fdf4', color:'#16a34a', border:'#bbf7d0' },
       'Suite':    { bg:'#fff7ed', color:'#ea580c', border:'#fed7aa' }
     };
-    const typeIcons = { 'Standard':'🛏️', 'Deluxe':'🌟', 'Suite':'👑' };
-
     resultDiv.innerHTML = `
       <div class="alert alert-success" style="border-radius:10px;">
         ${data.message} — ${data.nights} night(s)
       </div>
       ${Object.keys(grouped).map(type => {
         const c    = typeColors[type] || { bg:'#f8fafc', color:'#64748b', border:'#e2e8f0' };
-        const icon = typeIcons[type] || '🏨';
         return `
           <div style="margin-bottom:16px;">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-              <span>${icon}</span>
+              <span style="width:8px;height:8px;border-radius:50%;background:${c.color};display:inline-block;"></span>
               <span style="font-weight:700;color:#1a1a2e;font-size:0.875rem;">
                 ${type}
               </span>

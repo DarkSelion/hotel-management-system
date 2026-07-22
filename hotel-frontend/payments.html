@@ -37,21 +37,21 @@
       <div class="row g-3 mb-2">
         <div class="col-md-4 col-6">
           <div class="stat-card">
-            <div class="indicator" style="background:#ecfdf5;">💰</div>
+
             <div class="label">Total Revenue</div>
             <div class="value" style="color:#059669;font-size:1.4rem;" id="totalRevenue">--</div>
           </div>
         </div>
         <div class="col-md-4 col-6">
           <div class="stat-card">
-            <div class="indicator" style="background:#eef2ff;">📊</div>
+
             <div class="label">Total Transactions</div>
             <div class="value" style="color:#4f46e5;" id="totalTransactions">--</div>
           </div>
         </div>
         <div class="col-md-4 col-6">
           <div class="stat-card">
-            <div class="indicator" style="background:#fff7ed;">📈</div>
+
             <div class="label">Average Payment</div>
             <div class="value" style="color:#ea580c;" id="avgPayment">--</div>
           </div>
@@ -74,7 +74,9 @@
             <div style="position:relative;" id="dropdownWrapper">
               <div onclick="toggleDropdown()" style="border:1.5px solid #e2e8f0;border-radius:12px;padding:14px 18px;font-size:0.9rem;background:#fafbfc;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:all 0.2s;" onmouseover="this.style.borderColor='#cbd5e1'" onmouseout="this.style.borderColor='#e2e8f0'">
                 <div style="display:flex;align-items:center;gap:10px;">
-                  <span style="font-size:1.1rem;">🔍</span>
+                  <span style="width:18px;height:18px;border:2px solid #94a3b8;border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative;">
+                    <span style="position:absolute;bottom:-2px;right:-2px;width:6px;height:2px;background:#94a3b8;transform:rotate(45deg);border-radius:1px;"></span>
+                  </span>
                   <span id="dropdownLabel" style="color:#94a3b8;">-- Select a guest reservation --</span>
                 </div>
                 <span style="color:#94a3b8;font-size:0.8rem;">▼</span>
@@ -125,18 +127,17 @@
                 <label class="form-label">Reservation ID</label>
                 <div style="position:relative;">
                   <input type="number" id="reservationId" class="form-control" placeholder="Auto-filled when selected" readonly style="padding-left:40px;">
-                  <span style="position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:0.9rem;">🎫</span>
+                  <span style="position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:0.8rem;font-weight:700;color:#64748b;">#</span>
                 </div>
               </div>
               <div class="col-md-4">
                 <label class="form-label">Payment Method</label>
                 <div style="display:flex;gap:8px;height:43px;">
                   <div id="methodCash" onclick="selectMethod('Cash')" style="flex:1;border:2px solid #0f172a;border-radius:10px;cursor:pointer;background:#0f172a;color:white;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:6px;">
-                    <span style="font-size:0.78rem;">💵</span>
+                    <span style="font-size:0.7rem;font-weight:800;">₱</span>
                     <span style="font-size:0.78rem;font-weight:700;">Cash</span>
                   </div>
                   <div id="methodGCash" onclick="selectMethod('GCash')" style="flex:1;border:2px solid #e2e8f0;border-radius:10px;cursor:pointer;background:white;color:#64748b;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:6px;">
-                    <span style="font-size:0.78rem;">📱</span>
                     <span style="font-size:0.78rem;font-weight:700;">GCash</span>
                   </div>
                 </div>

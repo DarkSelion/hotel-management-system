@@ -35,7 +35,7 @@
     <div class="row g-3">
       <div class="col-6 col-md-3">
         <div class="stat-card">
-          <div class="indicator" style="background:#eef2ff;">🏨</div>
+
           <div class="label">Total Rooms</div>
           <div class="value" style="color:#0f172a;" id="totalRooms">--</div>
           <div class="sublabel">All room inventory</div>
@@ -43,7 +43,7 @@
       </div>
       <div class="col-6 col-md-3">
         <div class="stat-card">
-          <div class="indicator" style="background:#ecfdf5;">✅</div>
+
           <div class="label">Available</div>
           <div class="value" style="color:#059669;" id="availableRooms">--</div>
           <div class="sublabel">Ready for booking</div>
@@ -51,7 +51,7 @@
       </div>
       <div class="col-6 col-md-3">
         <div class="stat-card">
-          <div class="indicator" style="background:#fef2f2;">🔴</div>
+
           <div class="label">Occupied</div>
           <div class="value" style="color:#dc2626;" id="occupiedRooms">--</div>
           <div class="sublabel">Currently in use</div>
@@ -59,7 +59,7 @@
       </div>
       <div class="col-6 col-md-3">
         <div class="stat-card">
-          <div class="indicator" style="background:#fff7ed;">📋</div>
+
           <div class="label">Total Bookings</div>
           <div class="value" style="color:#ea580c;" id="totalReservations">--</div>
           <div class="sublabel">All time bookings</div>
@@ -140,7 +140,7 @@
       <div class="row g-3">
         <div class="col-6 col-md-3">
           <div class="stat-card">
-            <div class="indicator" style="background:#ecfdf5;">💰</div>
+
             <div class="label">Total Revenue</div>
             <div class="value" style="color:#059669;font-size:1.4rem;" id="totalRevenue">--</div>
             <div class="sublabel">From all payments</div>
@@ -148,7 +148,7 @@
         </div>
         <div class="col-6 col-md-3">
           <div class="stat-card">
-            <div class="indicator" style="background:#eef2ff;">📅</div>
+
             <div class="label">Active Bookings</div>
             <div class="value" style="color:#4f46e5;" id="activeBookings">--</div>
             <div class="sublabel">Booked + Checked In</div>
@@ -156,7 +156,7 @@
         </div>
         <div class="col-6 col-md-3">
           <div class="stat-card">
-            <div class="indicator" style="background:#f1f5f9;">🏁</div>
+
             <div class="label">Checked Out</div>
             <div class="value" style="color:#64748b;" id="checkedOut">--</div>
             <div class="sublabel">Completed stays</div>
@@ -164,7 +164,7 @@
         </div>
         <div class="col-6 col-md-3">
           <div class="stat-card">
-            <div class="indicator" style="background:#fef2f2;">❌</div>
+
             <div class="label">Cancelled</div>
             <div class="value" style="color:#dc2626;" id="cancelled">--</div>
             <div class="sublabel">Cancelled bookings</div>
@@ -173,6 +173,7 @@
       </div>
     </div>
 
+    <div id="recentSection">
     <div class="section-title">Recent Bookings</div>
     <div class="table-card">
       <div class="table-header">
@@ -203,6 +204,7 @@
         </table>
       </div>
     </div>
+    </div>
 
   </div>
 </div>
@@ -215,8 +217,12 @@
   setupWelcome();
 
   const user = getUser();
-  if (user.role === 'Receptionist') {
+  if (user.role === 'Receptionist' || user.role === 'Guest') {
     document.getElementById('financeSection').style.display = 'none';
+  }
+  if (user.role === 'Guest') {
+    document.querySelector('.section-title').textContent = 'My Stay Overview';
+    document.getElementById('recentSection').style.display = 'none';
   }
 </script>
 <script src="js/dashboard.js"></script>

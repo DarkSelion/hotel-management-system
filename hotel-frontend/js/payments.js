@@ -26,7 +26,7 @@ async function autoSelectPendingPayment() {
     }
 
     // Show a toast notification
-    showPaymentToast(`Guest checked in — Record payment for ${data.guestName}`);
+    showPaymentToast(`Payment pending — Record payment for ${data.guestName}`);
   }, 500);
 }
 
@@ -45,7 +45,7 @@ function showPaymentToast(message) {
     z-index:9999;display:flex;align-items:center;gap:10px;
     max-width:320px;`;
   toast.innerHTML = `
-    <span style="font-size:1.2rem;">💳</span>
+    <span style="width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:800;">$</span>
     <span>${message}</span>`;
   document.body.appendChild(toast);
 
@@ -237,15 +237,15 @@ async function recordPayment() {
     const data = await res.json();
 
     if (res.ok) {
-      // Step 2: Check if reservation status is Booked then auto check in
-      const resDetails = await fetch(
-        `${API}/api/reservations/${reservation_id}`, {
-        headers: { 'Authorization': `Bearer ${getToken()}` }
-      });
-      const resData = await resDetails.json();
+      // Step 2: If reservation is still Booked, send auto_checkin flag
+      // (backend handles it atomically via tryAutoCheckIn)
+      const isBooked = data.reservation_status === 'Booked' ||
+                       !data.reservation_status;
+      let checkedIn  = data.checked_in || false;
 
-      let checkedIn = false;
-      if (resData.status === 'Booked') {
+      if (isBooked && !checkedIn) {
+        // Re-record with auto_checkin = true won't work — instead
+        // call the checkin endpoint which now validates payment first
         const checkInRes = await fetch(
           `${API}/api/reservations/${reservation_id}/checkin`, {
           method:  'PATCH',
@@ -254,7 +254,14 @@ async function recordPayment() {
         if (checkInRes.ok) checkedIn = true;
       }
 
-      // Step 3: Show success modal
+      // Step 3: Re-fetch reservation details to get updated state for the modal
+      const resDetails = await fetch(
+        `${API}/api/reservations/${reservation_id}`,
+        { headers: { 'Authorization': `Bearer ${getToken()}` } }
+      );
+      const resData = resDetails.ok ? await resDetails.json() : {};
+
+      // Step 4: Show success modal
       showPaymentSuccess(
         data,
         resData,
@@ -304,9 +311,7 @@ function showPaymentSuccess(payData, resData, checkedIn, method, amount) {
                 max-width:460px;width:90%;text-align:center;
                 box-shadow:0 20px 60px rgba(0,0,0,0.3);">
 
-      <div style="font-size:3rem;margin-bottom:12px;">
-        ${checkedIn ? '🏨' : '✅'}
-      </div>
+      <div style="width:56px;height:56px;margin:0 auto 12px;background:#059669;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:1.6rem;">&#10003;</div>
 
       <h5 style="font-weight:800;color:#1a1a2e;margin-bottom:6px;">
         Payment Recorded!
@@ -317,7 +322,7 @@ function showPaymentSuccess(payData, resData, checkedIn, method, amount) {
                     border-radius:10px;padding:10px 16px;
                     margin:12px 0;display:flex;align-items:center;
                     justify-content:center;gap:8px;">
-          <span style="font-size:1rem;">✅</span>
+          <span style="font-size:1rem;color:#16a34a;font-weight:800;">&#10003;</span>
           <span style="color:#16a34a;font-weight:700;font-size:0.9rem;">
             Guest has been automatically checked in
           </span>

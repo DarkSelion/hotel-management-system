@@ -3,7 +3,8 @@ const API = 'http://localhost:3000' /*'http://3.106.251.7:3000';*/
 const ROLE_COLORS = {
   'Admin':        'background:#fef2f2;color:#dc2626;',
   'Receptionist': 'background:#f0fdf4;color:#16a34a;',
-  'Manager':      'background:#eff6ff;color:#2563eb;'
+  'Manager':      'background:#eff6ff;color:#2563eb;',
+  'Guest':        'background:#f5f3ff;color:#7c3aed;'
 };
 
 const ADMIN_MENU = `
@@ -20,6 +21,13 @@ const STAFF_MENU = `
   <a href="dashboard.html">Dashboard</a>
   <a href="booking.html">Bookings</a>
   <a href="payments.html">Payments</a>
+  <hr class="divider">
+  <a href="#" onclick="logout()">Logout</a>`;
+
+const GUEST_MENU = `
+  <div class="menu-label">Main Menu</div>
+  <a href="dashboard.html">My Dashboard</a>
+  <a href="booking.html">Book a Room</a>
   <hr class="divider">
   <a href="#" onclick="logout()">Logout</a>`;
 
@@ -47,9 +55,12 @@ function setupSidebar(activePage) {
 
   document.getElementById('sidebarRole').textContent =
     role === 'Admin' ? 'Admin Panel' :
-    role === 'Receptionist' ? 'Front Desk' : 'Management';
+    role === 'Receptionist' ? 'Front Desk' :
+    role === 'Guest' ? 'Guest Portal' : 'Management';
 
-  const menu = role === 'Admin' ? ADMIN_MENU : STAFF_MENU;
+  const menu =
+    role === 'Admin' ? ADMIN_MENU :
+    role === 'Guest' ? GUEST_MENU : STAFF_MENU;
   document.getElementById('sidebarMenu').innerHTML = menu;
 
   // Set active link

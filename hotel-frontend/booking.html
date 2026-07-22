@@ -32,7 +32,7 @@
   <div class="content-area">
 
     <!-- Create Booking -->
-    <div class="section-title">Create Front Desk Booking</div>
+    <div class="section-title" id="createBookingTitle">Create Front Desk Booking</div>
     <div class="card-custom">
       <div class="card-head">
         <h6>New Booking for Walk-in Guest</h6>
@@ -46,7 +46,7 @@
             <div class="date-picker-wrapper">
               <div class="date-display" onclick="openCalendar('checkin')">
                 <span id="checkinDisplay" class="placeholder">Select date</span>
-                <span>📅</span>
+                <span style="font-size:0.8rem;">▼</span>
               </div>
               <div class="calendar-popup" id="calCheckin"></div>
             </div>
@@ -57,7 +57,7 @@
             <div class="date-picker-wrapper">
               <div class="date-display" onclick="openCalendar('checkout')">
                 <span id="checkoutDisplay" class="placeholder">Select date</span>
-                <span>📅</span>
+                <span style="font-size:0.8rem;">▼</span>
               </div>
               <div class="calendar-popup" id="calCheckout"></div>
             </div>
@@ -136,6 +136,7 @@
     </div>
 
     <!-- Bookings Table -->
+    <div id="allBookingsSection">
     <div class="section-title">All Bookings</div>
     <div class="table-card">
       <div class="table-header"><h6>Booking Records</h6></div>
@@ -149,17 +150,19 @@
               <th>Check In</th>
               <th>Check Out</th>
               <th>Amount</th>
+              <th>Payment</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody id="bookingsTable">
             <tr>
-              <td colspan="8" class="text-center py-4 text-muted">Loading...</td>
+              <td colspan="9" class="text-center py-4 text-muted">Loading...</td>
             </tr>
           </tbody>
         </table>
       </div>
+    </div>
     </div>
 
   </div>
@@ -192,6 +195,11 @@
   requireAuth();
   setupSidebar('booking.html');
   setupWelcome();
+  if (getUser().role === 'Guest') {
+    document.getElementById('allBookingsSection').style.display = 'none';
+    document.getElementById('createBookingTitle').textContent = 'Book a Room';
+    document.querySelector('.card-head h6').textContent = 'New Booking';
+  }
 </script>
 <script src="js/booking.js"></script>
 </body>

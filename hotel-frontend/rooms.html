@@ -42,7 +42,7 @@
             <div class="date-picker-wrapper">
               <div class="date-display" onclick="openCalendar('checkin')">
                 <span id="checkinDisplay" class="placeholder">Select date</span>
-                <span>📅</span>
+                <span style="font-size:0.8rem;">▼</span>
               </div>
               <div class="calendar-popup" id="calCheckin"></div>
             </div>
@@ -53,7 +53,7 @@
             <div class="date-picker-wrapper">
               <div class="date-display" onclick="openCalendar('checkout')">
                 <span id="checkoutDisplay" class="placeholder">Select date</span>
-                <span>📅</span>
+                <span style="font-size:0.8rem;">▼</span>
               </div>
               <div class="calendar-popup" id="calCheckout"></div>
             </div>
@@ -141,9 +141,9 @@
         </p>
         <label class="form-label">New Status</label>
         <select id="newStatus" class="form-select">
-          <option value="Available">✅ Available</option>
-          <option value="Occupied">🔴 Occupied</option>
-          <option value="Under Maintenance">🔧 Under Maintenance</option>
+          <option value="Available">Available</option>
+          <option value="Occupied">Occupied</option>
+          <option value="Under Maintenance">Under Maintenance</option>
         </select>
       </div>
       <div class="modal-footer border-0">
